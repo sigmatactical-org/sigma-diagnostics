@@ -14,7 +14,7 @@ pub mod state;
 pub use state::{AppState, InitialFiles};
 
 // Re-export DTO types for use by pro crate
-pub use dto::{CanFrameDto, DecodedSignalDto};
+pub use dto::{CanBpfFilter, CanFrameDto, DecodedSignalDto};
 
 // Re-export filter types, utilities, and commands for use by pro crate
 pub use commands::filter::{

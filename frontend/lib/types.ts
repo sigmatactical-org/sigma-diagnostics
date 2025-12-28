@@ -29,6 +29,22 @@ export interface DecodeResponse {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Socket-level BPF Filters
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Kernel-level CAN filter (BPF) for socket filtering */
+export interface CanBpfFilter {
+  /** CAN ID to match */
+  can_id: number;
+  /** Mask for matching (1 bits = must match, 0 bits = don't care) */
+  mask: number;
+  /** If true, filter matches extended (29-bit) IDs */
+  is_extended: boolean;
+  /** If true, invert the filter (reject matching frames) */
+  inverted: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Live Capture DTOs (from Rust)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -149,7 +165,7 @@ export interface CanViewerApi {
   /** List CAN interfaces */
   listCanInterfaces(): Promise<string[]>;
   /** Start capture on interface, writing to capture file */
-  startCapture(iface: string, captureFile: string, append?: boolean): Promise<void>;
+  startCapture(iface: string, captureFile: string, append?: boolean, filters?: CanBpfFilter[]): Promise<void>;
   /** Stop capture, returns path to finalized MDF4 file */
   stopCapture(): Promise<string>;
   /** Get initial files from CLI */

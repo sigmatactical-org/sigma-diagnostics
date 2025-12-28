@@ -6,7 +6,7 @@
  * This component only receives and renders periodic updates.
  */
 
-import type { DbcInfo, FileFilter, LiveCaptureUpdate } from '../../types';
+import type { DbcInfo, FileFilter, LiveCaptureUpdate, CanBpfFilter } from '../../types';
 import { extractFilename } from '../../utils';
 import { events, emitCaptureStarted, emitCaptureStopped, emitLiveInterfacesLoaded, type DbcChangedEvent } from '../../events';
 import { liveStore, appStore } from '../../store';
@@ -16,13 +16,15 @@ import styles from '../../../styles/can-viewer.css?inline';
 /** API interface for Live Viewer */
 export interface LiveViewerApi {
   listCanInterfaces(): Promise<string[]>;
-  startCapture(iface: string, captureFile: string, append: boolean): Promise<void>;
+  startCapture(iface: string, captureFile: string, append: boolean, filters?: CanBpfFilter[]): Promise<void>;
   stopCapture(): Promise<string>; // Returns finalized MDF4 path
   saveFileDialog(filters: FileFilter[], defaultName?: string): Promise<string | null>;
   getDbcInfo(): Promise<DbcInfo | null>;
   onLiveCaptureUpdate(callback: (update: LiveCaptureUpdate) => void): () => void;
   onCaptureFinalized(callback: (path: string) => void): () => void;
   onCaptureError(callback: (error: string) => void): () => void;
+  /** Optional callback to get BPF filters for an interface (for Pro) */
+  getFiltersForInterface?(iface: string): CanBpfFilter[] | undefined;
 }
 
 /** State for Live Viewer */
@@ -339,9 +341,12 @@ export class LiveViewerElement extends HTMLElement {
       this.state.captureFile = captureFile;
       this.updateStoreStatus();
 
-      await this.api.startCapture(iface, captureFile, appendMode);
+      // Get filters from Pro if available
+      const filters = this.api.getFiltersForInterface?.(iface);
+      await this.api.startCapture(iface, captureFile, appendMode, filters);
       const mode = appendMode ? 'Appending to' : 'Capturing to';
-      this.showMessage(`${mode} ${extractFilename(captureFile)}`);
+      const filterInfo = filters?.length ? ` (${filters.length} filter${filters.length > 1 ? 's' : ''})` : '';
+      this.showMessage(`${mode} ${extractFilename(captureFile)}${filterInfo}`);
       emitCaptureStarted({ interface: iface, captureFile });
     } catch (err) {
       console.error('[live-viewer] startCapture FAILED:', err);

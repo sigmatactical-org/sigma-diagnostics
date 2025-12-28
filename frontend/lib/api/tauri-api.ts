@@ -8,6 +8,7 @@ import type {
   InitialFiles,
   FileFilter,
   LiveCaptureUpdate,
+  CanBpfFilter,
 } from '../types';
 
 /** Tauri API implementation for CAN Viewer */
@@ -71,8 +72,8 @@ export class TauriApi implements CanViewerApi {
     return await this.invoke('list_can_interfaces') as string[];
   }
 
-  async startCapture(iface: string, captureFile: string, append: boolean = false): Promise<void> {
-    await this.invoke('start_capture', { interface: iface, captureFile, append });
+  async startCapture(iface: string, captureFile: string, append: boolean = false, filters?: CanBpfFilter[]): Promise<void> {
+    await this.invoke('start_capture', { interface: iface, captureFile, append, filters: filters || null });
   }
 
   async stopCapture(): Promise<string> {

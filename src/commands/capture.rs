@@ -71,6 +71,7 @@ pub async fn start_capture(
     interface: String,
     capture_file: String,
     append: bool,
+    filters: Option<Vec<crate::dto::CanBpfFilter>>,
     window: tauri::Window,
     state: State<'_, Arc<AppState>>,
 ) -> Result<(), String> {
@@ -82,7 +83,7 @@ pub async fn start_capture(
     use tauri::Emitter;
     use tokio::sync::oneshot;
 
-    use socketcan::{CanFdSocket, Socket};
+    use socketcan::{CanFilter, CanFdSocket, Socket, SocketOptions};
 
     // Check if already running
     if *state.capture_running.lock() {
@@ -92,6 +93,44 @@ pub async fn start_capture(
     // Open CAN FD socket
     let socket =
         CanFdSocket::open(&interface).map_err(|e| format!("Failed to open interface: {}", e))?;
+
+    // Apply kernel-level BPF filters if provided
+    if let Some(ref filter_list) = filters {
+        if !filter_list.is_empty() {
+            let can_filters: Vec<CanFilter> = filter_list
+                .iter()
+                .map(|f| {
+                    // Set EFF flag for extended IDs
+                    let can_id = if f.is_extended {
+                        f.can_id | 0x8000_0000 // CAN_EFF_FLAG
+                    } else {
+                        f.can_id
+                    };
+                    let mask = if f.is_extended {
+                        f.mask | 0x8000_0000 // Match EFF flag too
+                    } else {
+                        f.mask
+                    };
+
+                    if f.inverted {
+                        CanFilter::new_inverted(can_id, mask)
+                    } else {
+                        CanFilter::new(can_id, mask)
+                    }
+                })
+                .collect();
+
+            socket
+                .set_filters(&can_filters)
+                .map_err(|e| format!("Failed to set BPF filters: {}", e))?;
+
+            log::info!(
+                "Applied {} kernel-level CAN filter(s) on {}",
+                can_filters.len(),
+                interface
+            );
+        }
+    }
 
     socket
         .set_nonblocking(true)
@@ -272,6 +311,8 @@ fn finalize_mdf4(
 pub async fn start_capture(
     _interface: String,
     _capture_file: String,
+    _append: bool,
+    _filters: Option<Vec<crate::dto::CanBpfFilter>>,
     _window: tauri::Window,
     _state: State<'_, Arc<AppState>>,
 ) -> Result<(), String> {
