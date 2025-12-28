@@ -83,7 +83,7 @@ pub async fn start_capture(
     use tauri::Emitter;
     use tokio::sync::oneshot;
 
-    use socketcan::{CanFilter, CanFdSocket, Socket, SocketOptions};
+    use socketcan::{CanFdSocket, CanFilter, Socket, SocketOptions};
 
     // Check if already running
     if *state.capture_running.lock() {

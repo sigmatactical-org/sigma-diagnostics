@@ -69,11 +69,7 @@ pub async fn load_mdf4(
                     .and_then(|v| v.as_f64())
                     .map(|t| {
                         // If timestamp is very large, it's probably microseconds
-                        if t > 1e9 {
-                            t / 1_000_000.0
-                        } else {
-                            t
-                        }
+                        if t > 1e9 { t / 1_000_000.0 } else { t }
                     })
                     .unwrap_or(i as f64 * 0.001);
 

@@ -540,7 +540,9 @@ impl LiveCaptureState {
                     <polyline points=\"{}\" fill=\"none\" stroke=\"var(--cv-accent)\" stroke-width=\"1.5\" vector-effect=\"non-scaling-stroke\"/>\
                 </svg>\
             </div>",
-            VB_WIDTH, VB_HEIGHT, points.join(" ")
+            VB_WIDTH,
+            VB_HEIGHT,
+            points.join(" ")
         )
     }
 }

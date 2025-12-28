@@ -18,15 +18,6 @@ pub use dto::{CanBpfFilter, CanFrameDto, DecodedSignalDto};
 
 // Re-export filter types, utilities, and commands for use by pro crate
 pub use commands::filter::{
-    // Shared filter logic for pro crate
-    build_message_cache_from_dbc,
-    // Commands
-    calculate_frame_stats,
-    detect_dlc,
-    filter_frames_with_cache,
-    get_message_counts,
-    match_data_pattern,
-    parse_data_pattern,
     DbcMessageCache,
     DbcMessageInfo,
     // Types
@@ -36,6 +27,15 @@ pub use commands::filter::{
     FrameStats,
     MatchStatus,
     MessageCount,
+    // Shared filter logic for pro crate
+    build_message_cache_from_dbc,
+    // Commands
+    calculate_frame_stats,
+    detect_dlc,
+    filter_frames_with_cache,
+    get_message_counts,
+    match_data_pattern,
+    parse_data_pattern,
 };
 
 // Re-export MDF4 parsing utilities

@@ -1,6 +1,6 @@
 //! DBC file loading and management commands.
 
-use crate::decode::{decode_frame, DecodeResult};
+use crate::decode::{DecodeResult, decode_frame};
 use crate::dto::{CanFrameDto, DecodeResponse};
 use crate::state::AppState;
 use dbc_rs::{Dbc, FastDbc};

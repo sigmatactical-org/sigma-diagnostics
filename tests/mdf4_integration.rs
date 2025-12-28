@@ -8,8 +8,8 @@
 //! 2. Decoded MDF4: Load pre-decoded signal values
 
 use dbc_rs::Dbc;
-use mdf4_rs::can::{CanDbcLogger, RawCanLogger};
 use mdf4_rs::MDF;
+use mdf4_rs::can::{CanDbcLogger, RawCanLogger};
 
 /// The complete.dbc file content from can-frame-generator.
 const COMPLETE_DBC: &str = r#"VERSION "2.0"

@@ -7,7 +7,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use can_viewer::{base_commands, AppState, InitialFiles};
+use can_viewer::{AppState, InitialFiles, base_commands};
 use clap::Parser;
 use std::sync::Arc;
 use tauri::{Manager, Runtime};
