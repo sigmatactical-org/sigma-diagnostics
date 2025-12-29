@@ -11,6 +11,8 @@
  *   toast.info('Processing...');
  */
 
+import { escapeHtml } from '../../utils/html';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,7 +184,7 @@ class ToastManager {
     toastEl.className = `cv-toast ${type}`;
     toastEl.innerHTML = `
       <span class="cv-toast-icon">${ICONS[type]}</span>
-      <span class="cv-toast-content">${this.escapeHtml(message)}</span>
+      <span class="cv-toast-content">${escapeHtml(message)}</span>
       <button class="cv-toast-close" title="Dismiss">${ICONS.close}</button>
     `;
 
@@ -213,11 +215,6 @@ class ToastManager {
     this.show(message, 'info', options);
   }
 
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

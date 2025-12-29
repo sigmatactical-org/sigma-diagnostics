@@ -110,86 +110,44 @@ export class TauriApi implements CanViewerApi {
   }
 
   onCanFrame(callback: (frame: CanFrame) => void): () => void {
-    let unlisten: (() => void) | null = null;
-
-    this.listen('can-frame', (event) => {
+    const promise = this.listen('can-frame', (event) => {
       callback(event.payload as CanFrame);
-    }).then((fn) => {
-      unlisten = fn;
     });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
+    return () => { promise.then(fn => fn()); };
   }
 
   onDecodedSignal(callback: (signal: DecodedSignal) => void): () => void {
-    let unlisten: (() => void) | null = null;
-
-    this.listen('decoded-signal', (event) => {
+    const promise = this.listen('decoded-signal', (event) => {
       callback(event.payload as DecodedSignal);
-    }).then((fn) => {
-      unlisten = fn;
     });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
+    return () => { promise.then(fn => fn()); };
   }
 
   onDecodeError(callback: (error: string) => void): () => void {
-    let unlisten: (() => void) | null = null;
-
-    this.listen('decode-error', (event) => {
+    const promise = this.listen('decode-error', (event) => {
       callback(event.payload as string);
-    }).then((fn) => {
-      unlisten = fn;
     });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
+    return () => { promise.then(fn => fn()); };
   }
 
   onCaptureError(callback: (error: string) => void): () => void {
-    let unlisten: (() => void) | null = null;
-
-    this.listen('capture-error', (event) => {
+    const promise = this.listen('capture-error', (event) => {
       callback(event.payload as string);
-    }).then((fn) => {
-      unlisten = fn;
     });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
+    return () => { promise.then(fn => fn()); };
   }
 
   onLiveCaptureUpdate(callback: (update: LiveCaptureUpdate) => void): () => void {
-    let unlisten: (() => void) | null = null;
-
-    this.listen('live-capture-update', (event) => {
+    const promise = this.listen('live-capture-update', (event) => {
       callback(event.payload as LiveCaptureUpdate);
-    }).then((fn) => {
-      unlisten = fn;
     });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
+    return () => { promise.then(fn => fn()); };
   }
 
   onCaptureFinalized(callback: (path: string) => void): () => void {
-    let unlisten: (() => void) | null = null;
-
-    this.listen('capture-finalized', (event) => {
+    const promise = this.listen('capture-finalized', (event) => {
       callback(event.payload as string);
-    }).then((fn) => {
-      unlisten = fn;
     });
-
-    return () => {
-      if (unlisten) unlisten();
-    };
+    return () => { promise.then(fn => fn()); };
   }
 }

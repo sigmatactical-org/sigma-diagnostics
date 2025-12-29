@@ -1,5 +1,6 @@
 import type { CanFrame, DecodedSignal } from '../../types';
 import { formatSignalValue } from '../../utils';
+import { escapeHtml } from '../../utils/html';
 import { events, type FrameSelectedEvent, type DbcChangedEvent } from '../../events';
 
 /** API interface for signals panel (fallback decoding) */
@@ -19,15 +20,6 @@ export class SignalsPanelElement extends HTMLElement {
 
   constructor() {
     super();
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   connectedCallback(): void {
@@ -141,7 +133,7 @@ export class SignalsPanelElement extends HTMLElement {
           <tr>
             <td class="cv-signal-name">
               ${sig.signal_name}
-              ${sig.description ? `<div class="cv-signal-description">${this.escapeHtml(sig.description)}</div>` : ''}
+              ${sig.description ? `<div class="cv-signal-description">${escapeHtml(sig.description)}</div>` : ''}
             </td>
             <td class="cv-physical-value">${formatSignalValue(sig.value)}</td>
             <td class="cv-unit-highlight">${sig.unit || '-'}</td>

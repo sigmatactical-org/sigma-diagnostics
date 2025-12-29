@@ -4,6 +4,7 @@
 
 import type { NodeDto } from './types';
 import { createEvent, isValidDbcName } from './utils';
+import { escapeHtml } from '../../utils/html';
 import styles from '../../../styles/can-viewer.css?inline';
 
 export class NodesEditorElement extends HTMLElement {
@@ -28,15 +29,6 @@ export class NodesEditorElement extends HTMLElement {
     return this.nodes;
   }
 
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
   private render() {
     if (!this.shadowRoot) return;
 
@@ -46,27 +38,27 @@ export class NodesEditorElement extends HTMLElement {
         return `
           <div class="cv-node-card editing">
             <div class="cv-node-card-header">
-              <span class="cv-node-name">${this.escapeHtml(node.name)}</span>
-              <button class="cv-node-remove" data-node="${this.escapeHtml(node.name)}">&times;</button>
+              <span class="cv-node-name">${escapeHtml(node.name)}</span>
+              <button class="cv-node-remove" data-node="${escapeHtml(node.name)}">&times;</button>
             </div>
             <div class="cv-node-card-body">
-              <textarea class="cv-textarea cv-node-comment-input" id="node-comment-${this.escapeHtml(node.name)}"
+              <textarea class="cv-textarea cv-node-comment-input" id="node-comment-${escapeHtml(node.name)}"
                         rows="2" placeholder="Optional comment...">${node.comment || ''}</textarea>
               <div class="cv-node-actions">
-                <button class="cv-btn small success" data-save-node="${this.escapeHtml(node.name)}">Save</button>
-                <button class="cv-btn small" data-cancel-node="${this.escapeHtml(node.name)}">Cancel</button>
+                <button class="cv-btn small success" data-save-node="${escapeHtml(node.name)}">Save</button>
+                <button class="cv-btn small" data-cancel-node="${escapeHtml(node.name)}">Cancel</button>
               </div>
             </div>
           </div>
         `;
       }
       return `
-        <div class="cv-node-card" data-click-node="${this.escapeHtml(node.name)}">
+        <div class="cv-node-card" data-click-node="${escapeHtml(node.name)}">
           <div class="cv-node-card-header">
-            <span class="cv-node-name">${this.escapeHtml(node.name)}</span>
-            <button class="cv-node-remove" data-node="${this.escapeHtml(node.name)}">&times;</button>
+            <span class="cv-node-name">${escapeHtml(node.name)}</span>
+            <button class="cv-node-remove" data-node="${escapeHtml(node.name)}">&times;</button>
           </div>
-          ${node.comment ? `<div class="cv-node-comment">${this.escapeHtml(node.comment)}</div>` : ''}
+          ${node.comment ? `<div class="cv-node-comment">${escapeHtml(node.comment)}</div>` : ''}
         </div>
       `;
     }).join('');

@@ -6,6 +6,7 @@ import type { MessageDto, SignalDto } from './types';
 import type { CanFrame } from '../../types';
 import { createDefaultMessage, createDefaultSignal } from './types';
 import { detectDlcFromFrames } from '../../utils';
+import { escapeHtml } from '../../utils/html';
 import { deepClone, getSignalColor, getLinearBitPosition, getSliderConstraints } from './utils';
 import styles from '../../../styles/can-viewer.css?inline';
 import './signals-table';
@@ -86,7 +87,7 @@ export class MessageEditorElement extends HTMLElement {
             <span class="cv-msg-meta">DLC: ${this.message.dlc}</span>
             ${this.message.sender ? `<span class="cv-msg-meta">TX: ${this.message.sender}</span>` : ''}
             ${this.message.is_extended ? `<span class="cv-msg-meta">Extended</span>` : ''}
-            ${this.message.comment ? `<span class="cv-msg-meta dimmed">${this.escapeHtml(this.message.comment)}</span>` : ''}
+            ${this.message.comment ? `<span class="cv-msg-meta dimmed">${escapeHtml(this.message.comment)}</span>` : ''}
           </div>
           ${this.parentEditMode ? `
             <div class="cv-msg-actions">
@@ -98,15 +99,6 @@ export class MessageEditorElement extends HTMLElement {
         ${this.renderBitLayout()}
       </div>
     `;
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   private renderMessageEditMode(idHex: string): string {

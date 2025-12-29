@@ -44,20 +44,28 @@ impl SessionConfig {
         // First run: extract samples and set as defaults
         if !config.setup_complete {
             if let Some(config_dir) = Self::config_dir() {
-                let _ = fs::create_dir_all(&config_dir);
+                if let Err(e) = fs::create_dir_all(&config_dir) {
+                    log::warn!("Failed to create config directory: {}", e);
+                }
 
                 let mf4_path = config_dir.join("sample.mf4");
                 let dbc_path = config_dir.join("sample.dbc");
 
                 // Extract sample files
-                let _ = fs::write(&mf4_path, SAMPLE_MF4);
-                let _ = fs::write(&dbc_path, SAMPLE_DBC);
+                if let Err(e) = fs::write(&mf4_path, SAMPLE_MF4) {
+                    log::warn!("Failed to extract sample MF4: {}", e);
+                }
+                if let Err(e) = fs::write(&dbc_path, SAMPLE_DBC) {
+                    log::warn!("Failed to extract sample DBC: {}", e);
+                }
 
                 // Set as defaults
                 config.mdf4_path = Some(mf4_path.to_string_lossy().into_owned());
                 config.dbc_path = Some(dbc_path.to_string_lossy().into_owned());
                 config.setup_complete = true;
-                let _ = config.save();
+                if let Err(e) = config.save() {
+                    log::warn!("Failed to save initial config: {}", e);
+                }
             }
         }
 

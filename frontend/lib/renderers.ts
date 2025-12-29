@@ -1,4 +1,5 @@
 import type { DbcInfo, MessageInfo } from './types';
+import { escapeHtml } from './utils/html';
 
 /** Render DBC messages list */
 export function renderDbcMessagesHtml(
@@ -53,12 +54,3 @@ export function renderInterfaceOptions(interfaces: string[]): string {
     interfaces.map(iface => `<option value="${iface}">${iface}</option>`).join('');
 }
 
-/** Escape HTML special characters to prevent XSS */
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;');
-}

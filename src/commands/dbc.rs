@@ -3,7 +3,7 @@
 use crate::decode::{DecodeResult, decode_frame};
 use crate::dto::{CanFrameDto, DecodeResponse};
 use crate::state::AppState;
-use dbc_rs::{Dbc, FastDbc};
+use dbc_rs::Dbc;
 use serde::Serialize;
 use std::sync::Arc;
 use tauri::State;
@@ -51,14 +51,9 @@ pub async fn load_dbc(path: String, state: State<'_, Arc<AppState>>) -> Result<S
         std::fs::read_to_string(&path).map_err(|e| format!("Failed to read DBC: {}", e))?;
 
     let dbc = Dbc::parse(&content).map_err(|e| format!("Failed to parse DBC: {:?}", e))?;
-
     let msg_count = dbc.messages().len();
 
-    // Create FastDbc for O(1) message lookup in hot paths
-    let fast_dbc = FastDbc::new(dbc.clone());
-
-    *state.dbc.lock() = Some(dbc);
-    *state.fast_dbc.lock() = Some(fast_dbc);
+    state.set_dbc(dbc);
     *state.dbc_path.lock() = Some(path.clone());
 
     // Save to session config for persistence
@@ -73,8 +68,7 @@ pub async fn load_dbc(path: String, state: State<'_, Arc<AppState>>) -> Result<S
 /// Removes from session config.
 #[tauri::command]
 pub async fn clear_dbc(state: State<'_, Arc<AppState>>) -> Result<(), String> {
-    *state.dbc.lock() = None;
-    *state.fast_dbc.lock() = None;
+    state.clear_dbc();
     *state.dbc_path.lock() = None;
 
     // Clear from session config
@@ -158,12 +152,8 @@ pub async fn save_dbc_content(
     // Content is valid, now write to file
     std::fs::write(&path, &content).map_err(|e| format!("Failed to write DBC: {}", e))?;
 
-    // Create FastDbc for O(1) message lookup in hot paths
-    let fast_dbc = FastDbc::new(dbc.clone());
-
     // Update state with the parsed DBC
-    *state.dbc.lock() = Some(dbc);
-    *state.fast_dbc.lock() = Some(fast_dbc);
+    state.set_dbc(dbc);
     *state.dbc_path.lock() = Some(path.clone());
 
     // Save to session config
@@ -184,11 +174,7 @@ pub async fn update_dbc_content(
     let dbc = Dbc::parse(&content).map_err(|e| format!("Failed to parse DBC: {:?}", e))?;
     let msg_count = dbc.messages().len();
 
-    // Create FastDbc for O(1) message lookup in hot paths
-    let fast_dbc = FastDbc::new(dbc.clone());
-
-    *state.dbc.lock() = Some(dbc);
-    *state.fast_dbc.lock() = Some(fast_dbc);
+    state.set_dbc(dbc);
     Ok(format!("Updated DBC with {} messages", msg_count))
 }
 

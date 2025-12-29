@@ -5,6 +5,7 @@
 import type { SignalDto } from './types';
 import { createDefaultSignal } from './types';
 import { deepClone, createEvent } from './utils';
+import { escapeHtml } from '../../utils/html';
 import styles from '../../../styles/can-viewer.css?inline';
 
 export class SignalEditorElement extends HTMLElement {
@@ -144,7 +145,7 @@ export class SignalEditorElement extends HTMLElement {
       </div>
 
       <div class="view-container">
-        ${this.signal.comment ? `<div class="cv-signal-comment">${this.escapeHtml(this.signal.comment)}</div>` : ''}
+        ${this.signal.comment ? `<div class="cv-signal-comment">${escapeHtml(this.signal.comment)}</div>` : ''}
         <div class="cv-field"><span class="cv-field-label">Start Bit</span><span class="cv-field-value">${this.signal.start_bit}</span></div>
         <div class="cv-field"><span class="cv-field-label">Length</span><span class="cv-field-value">${this.signal.length} bits</span></div>
         <div class="cv-field"><span class="cv-field-label">Byte Order</span><span class="cv-field-value text">${byteOrder}</span></div>
@@ -169,15 +170,6 @@ export class SignalEditorElement extends HTMLElement {
     this.shadowRoot.getElementById('delete-btn')?.addEventListener('click', () => {
       this.dispatchEvent(createEvent('signal-delete-request', { name: this.signal.name }));
     });
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   private renderEditMode() {

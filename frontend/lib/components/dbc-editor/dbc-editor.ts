@@ -7,6 +7,7 @@ import type { DbcDto } from './types';
 import type { CanFrame } from '../../types';
 import { createDefaultDbc, createDefaultMessage } from './types';
 import { exportDbcToString, deepClone } from './utils';
+import { escapeHtml } from '../../utils/html';
 import { events, emitDbcStateChange, emitDbcChanged, type Mdf4ChangedEvent } from '../../events';
 import { appStore } from '../../store';
 import styles from '../../../styles/can-viewer.css?inline';
@@ -263,20 +264,11 @@ export class DbcEditorComponent extends HTMLElement {
             <span class="cv-card-title">DBC File Preview</span>
           </div>
           <div class="cv-preview-content">
-            <pre class="cv-preview-text">${this.escapeHtml(dbcContent)}</pre>
+            <pre class="cv-preview-text">${escapeHtml(dbcContent)}</pre>
           </div>
         </div>
       </div>
     `;
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   private setupEventListeners() {

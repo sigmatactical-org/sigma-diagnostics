@@ -61,6 +61,20 @@ impl AppState {
             capture_stop_tx: Mutex::new(None),
         }
     }
+
+    /// Set the DBC database and create the corresponding FastDbc wrapper.
+    /// This ensures both are always updated atomically.
+    pub fn set_dbc(&self, dbc: Dbc) {
+        let fast_dbc = FastDbc::new(dbc.clone());
+        *self.dbc.lock() = Some(dbc);
+        *self.fast_dbc.lock() = Some(fast_dbc);
+    }
+
+    /// Clear the DBC database and FastDbc wrapper.
+    pub fn clear_dbc(&self) {
+        *self.dbc.lock() = None;
+        *self.fast_dbc.lock() = None;
+    }
 }
 
 impl Default for AppState {
