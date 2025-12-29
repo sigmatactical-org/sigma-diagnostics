@@ -42,10 +42,10 @@ log = "0.4"
 parking_lot = "0.12"
 
 # MDF4 parsing (local path for development)
-mdf4-rs = "0.1.3"
+mdf4-rs = "0.1.4"
 
 # DBC parsing (local path for development)
-dbc-rs = { version = "0.2.2", features = ["std", "embedded-can"] }
+dbc-rs = { version = "0.3.0", features = ["std", "embedded-can"] }
 
 # embedded-can for standard CAN types
 embedded-can = "0.4"

@@ -593,6 +593,18 @@
   margin: 0 4px;
 }
 
+/* Disabled toolbar (Pro features without license) */
+.cv-toolbar[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Disabled tab styling */
+.cv-tab.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Tables
