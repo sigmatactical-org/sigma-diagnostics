@@ -199,10 +199,7 @@ export class DbcEditorComponent extends HTMLElement {
           </div>
         </cv-messages-list>
 
-        <div class="cv-card" id="messageDetail">
-          <div class="cv-card-header">
-            <span class="cv-card-title">Message Details</span>
-          </div>
+        <div class="cv-card cv-card-no-header" id="messageDetail">
           ${this.isAddingMessage || selectedMessage ? `
             <cv-message-editor data-edit-mode="${this.isEditMode}"></cv-message-editor>
           ` : `

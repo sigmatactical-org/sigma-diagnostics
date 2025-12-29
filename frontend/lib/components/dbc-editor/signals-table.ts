@@ -35,24 +35,21 @@ export class SignalsTableElement extends HTMLElement {
     const rows = this.signals.map((sig) => {
       const isSelected = this.selectedName === sig.name;
       const byteOrder = sig.byte_order === 'little_endian' ? 'LE' : 'BE';
-      const signed = sig.is_unsigned ? 'U' : 'S';
-      const unit = sig.unit || '-';
+      const signed = sig.is_unsigned ? '+' : '±';
+      const unit = sig.unit || '';
       const mux = sig.is_multiplexer ? 'M' :
-                  sig.multiplexer_value !== null ? `m${sig.multiplexer_value}` : '-';
+                  sig.multiplexer_value !== null ? `m${sig.multiplexer_value}` : '';
+      const bits = `${sig.start_bit}:${sig.length}`;
+      const range = `${sig.min}…${sig.max}`;
 
       return `
-        <tr class="${isSelected ? 'selected' : ''}" data-name="${sig.name}">
-          <td>${sig.name}</td>
-          <td style="font-family: var(--cv-font-mono)">${sig.start_bit}</td>
-          <td style="font-family: var(--cv-font-mono)">${sig.length}</td>
-          <td>${byteOrder}</td>
-          <td>${signed}</td>
-          <td style="font-family: var(--cv-font-mono)">${sig.factor}</td>
-          <td style="font-family: var(--cv-font-mono)">${sig.offset}</td>
-          <td style="font-family: var(--cv-font-mono)">${sig.min}</td>
-          <td style="font-family: var(--cv-font-mono)">${sig.max}</td>
+        <tr class="${isSelected ? 'selected' : ''}" data-name="${sig.name}" title="Factor: ${sig.factor}, Offset: ${sig.offset}">
+          <td class="sig-name">${sig.name}</td>
+          <td class="sig-mono">${bits}</td>
+          <td class="sig-center">${byteOrder}${signed}</td>
+          <td class="sig-mono">${range}</td>
           <td>${unit}</td>
-          <td>${mux}</td>
+          <td class="sig-center">${mux}</td>
         </tr>
       `;
     }).join('');
@@ -60,23 +57,21 @@ export class SignalsTableElement extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${styles}
         :host { display: block; }
+        .sig-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sig-mono { font-family: var(--cv-font-mono); white-space: nowrap; }
+        .sig-center { text-align: center; }
       </style>
 
       ${this.signals.length === 0 ? `
         <div class="cv-empty-message">No signals defined. Click "Add Signal" to create one.</div>
       ` : `
-        <table class="cv-table">
+        <table class="cv-table cv-table-compact">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Start</th>
-              <th>Len</th>
-              <th>Order</th>
-              <th>Sign</th>
-              <th>Factor</th>
-              <th>Offset</th>
-              <th>Min</th>
-              <th>Max</th>
+              <th>Signal</th>
+              <th>Bit:Len</th>
+              <th>Type</th>
+              <th>Range</th>
               <th>Unit</th>
               <th>Mux</th>
             </tr>

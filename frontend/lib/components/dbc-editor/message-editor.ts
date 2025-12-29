@@ -78,7 +78,7 @@ export class MessageEditorElement extends HTMLElement {
   private renderMessageViewMode(idHex: string): string {
     const idDecimal = this.message.id;
     return `
-      <div class="cv-section">
+      <div class="cv-card-header cv-msg-card-header">
         <div class="cv-msg-header">
           <div class="cv-msg-header-info">
             <span class="cv-msg-title">${this.message.name || '(unnamed)'}</span>
@@ -86,6 +86,7 @@ export class MessageEditorElement extends HTMLElement {
             <span class="cv-msg-meta">DLC: ${this.message.dlc}</span>
             ${this.message.sender ? `<span class="cv-msg-meta">TX: ${this.message.sender}</span>` : ''}
             ${this.message.is_extended ? `<span class="cv-msg-meta">Extended</span>` : ''}
+            ${this.message.comment ? `<span class="cv-msg-meta dimmed">${this.escapeHtml(this.message.comment)}</span>` : ''}
           </div>
           ${this.parentEditMode ? `
             <div class="cv-msg-actions">
@@ -94,7 +95,7 @@ export class MessageEditorElement extends HTMLElement {
             </div>
           ` : ''}
         </div>
-        ${this.message.comment ? `<div class="cv-msg-comment">${this.escapeHtml(this.message.comment)}</div>` : ''}
+        ${this.renderBitLayout()}
       </div>
     `;
   }
@@ -110,7 +111,7 @@ export class MessageEditorElement extends HTMLElement {
 
   private renderMessageEditMode(idHex: string): string {
     return `
-      <div class="cv-section">
+      <div class="cv-card-header cv-msg-card-header">
         <div class="cv-msg-header">
           <div class="cv-form-group" style="flex: 1; margin-bottom: 0; margin-right: 16px;">
             <label class="cv-label">Name</label>
@@ -159,6 +160,8 @@ export class MessageEditorElement extends HTMLElement {
           <label class="cv-label">Comment</label>
           <textarea class="cv-textarea" id="msg_comment" rows="2" placeholder="Optional description">${this.message.comment || ''}</textarea>
         </div>
+
+        ${this.renderBitLayout()}
       </div>
     `;
   }
@@ -411,10 +414,10 @@ export class MessageEditorElement extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${styles}
         :host {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 16px;
-          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          padding: 12px;
           flex: 1;
           min-height: 0;
           overflow-y: auto;
@@ -423,26 +426,19 @@ export class MessageEditorElement extends HTMLElement {
 
       ${this.isEditingMessage ? this.renderMessageEditMode(idHex) : this.renderMessageViewMode(idHex)}
 
-      <div class="cv-section cv-signals-section">
-        <div class="cv-section-header">
-          <span class="cv-section-title">Signals (${this.message.signals.length})</span>
-          ${this.parentEditMode ? `
-            <button class="cv-btn accent small" id="add-signal-btn">+ Add Signal</button>
-          ` : ''}
-        </div>
-
-        ${this.renderBitLayout()}
-
-        <div class="cv-signals-layout">
-          <div class="cv-signals-table-container">
-            <cv-signals-table></cv-signals-table>
+      <div class="cv-signals-layout">
+        <div class="cv-signals-table-container">
+          <div class="cv-signals-table-header">
+            <span>Signals (${this.message.signals.length})</span>
+            ${this.parentEditMode ? `<button class="cv-btn accent small" id="add-signal-btn">+ Add</button>` : ''}
           </div>
-          ${this.isAddingSignal || this.selectedSignal ? `
-            <div class="cv-signal-editor-panel">
-              <cv-signal-editor data-edit-mode="${this.parentEditMode}"></cv-signal-editor>
-            </div>
-          ` : ''}
+          <cv-signals-table></cv-signals-table>
         </div>
+        ${this.isAddingSignal || this.selectedSignal ? `
+          <div class="cv-signal-editor-panel">
+            <cv-signal-editor data-edit-mode="${this.parentEditMode}"></cv-signal-editor>
+          </div>
+        ` : ''}
       </div>
     `;
 

@@ -130,12 +130,35 @@ export class Mdf4InspectorElement extends HTMLElement {
     } else if (event.action !== 'cleared') {
       // DBC was loaded/updated but dbcInfo not in event - fetch from API
       await this.refreshDbcInfo();
-      return; // refreshDbcInfo already calls renderFrames
     } else {
       this.state.dbcInfo = null;
     }
-    this.renderFrames();
-    // Note: signals-panel handles re-decode via its own dbc:changed listener
+
+    // Re-decode MDF4 frames with new DBC if we have a file loaded
+    if (this.state.currentFile && event.action !== 'cleared') {
+      await this.reloadCurrentFile();
+    } else {
+      this.renderFrames();
+    }
+  }
+
+  /** Reload current MDF4 file (used when DBC changes to re-decode signals) */
+  private async reloadCurrentFile(): Promise<void> {
+    if (!this.api || !this.state.currentFile) return;
+
+    try {
+      const [frames, decodedSignals] = await this.api.loadMdf4(this.state.currentFile);
+      this.state.frames = frames;
+      this.state.filteredFrames = [...frames];
+
+      // Update global state with new decoded signals
+      appStore.set({ mdf4Frames: frames, mdf4Signals: decodedSignals });
+
+      this.renderFrames();
+      this.signalsPanel?.clear();
+    } catch (err) {
+      console.error('Failed to reload MDF4:', err);
+    }
   }
 
   /** Refresh DBC info from API (used on initial setup or when DBC changes) */
@@ -503,7 +526,9 @@ export class Mdf4InspectorElement extends HTMLElement {
   private updateFilterTabBadge(): void {
     const countEl = this.shadow.querySelector('#filterCount');
     if (countEl) {
-      countEl.textContent = String(countActiveFilters(this.state.filters));
+      const count = countActiveFilters(this.state.filters);
+      countEl.textContent = String(count);
+      countEl.classList.toggle('active', count > 0);
     }
   }
 
