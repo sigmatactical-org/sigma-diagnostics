@@ -1,3 +1,6 @@
+> **Archived (read-only).** Development has moved to **[`pelorus-marine/platform`](https://github.com/pelorus-marine/platform)** — use **[`pelorus-inspector`](https://github.com/pelorus-marine/platform/tree/main/pelorus-inspector)** (Tauri app: MDF4, DBC, SocketCAN).  
+> This repo is **historic only**; issues and PRs are closed. Open new work on **`pelorus-marine/platform`**.
+
 # can-viewer
 
 A desktop application for viewing and analyzing CAN bus data from MDF4 files and live SocketCAN interfaces.
