@@ -1,9 +1,47 @@
 import { SigmaTheme } from "../theme.slint";
 
-export component SigmaMark inherits Image {
-    source: @image-url("../assets/sigma-mark.svg");
+export component SigmaMark inherits Rectangle {
     width: 28px;
     height: 28px;
+
+    // Eye stays dark; once a minute it flares to full red, then dims back off.
+    in-out property <float> eye-intensity: 0.0;
+
+    animate eye-intensity {
+        duration: 1200ms;
+        easing: ease-in-out;
+    }
+
+    pulse-timer := Timer {
+        interval: 60s;
+        running: true;
+        triggered => {
+            root.eye-intensity = 1.0;
+            fade-timer.restart();
+        }
+    }
+
+    fade-timer := Timer {
+        interval: 1200ms;
+        running: false;
+        triggered => {
+            root.eye-intensity = 0.0;
+            self.stop();
+        }
+    }
+
+    Image {
+        source: @image-url("../assets/sigma-mark-body.svg");
+        width: 100%;
+        height: 100%;
+    }
+
+    Image {
+        source: @image-url("../assets/sigma-mark-eye.svg");
+        width: 100%;
+        height: 100%;
+        opacity: root.eye-intensity;
+    }
 }
 
 export component AppTitle inherits HorizontalLayout {

@@ -1,0 +1,148 @@
+import { ScrollView } from "std-widgets.slint";
+import { SigmaTheme } from "../theme.slint";
+import { AppTitle } from "../widgets/brand.slint";
+import { DepRow } from "../widgets/common.slint";
+
+export component AboutTab inherits Rectangle {
+    in property <string> version-text;
+    in property <string> copyright-text;
+    in property <string> license-notice;
+    in property <string> credits-text;
+    in property <string> transitive-summary;
+    in property <string> full-notices;
+    in property <[DepRow]> direct-deps;
+
+    background: SigmaTheme.background;
+
+    ScrollView {
+        VerticalLayout {
+            padding: 20px;
+            spacing: 14px;
+            width: 100%;
+
+            AppTitle {}
+
+            Text {
+                text: "Version " + root.version-text;
+                color: SigmaTheme.text-dim;
+            }
+
+            Text {
+                text: "Native desktop application for MDF4 log inspection, live SocketCAN capture (Linux), and DBC database editing.";
+                color: SigmaTheme.text;
+                wrap: word-wrap;
+            }
+
+            Text {
+                text: "Copyright";
+                color: SigmaTheme.text;
+                font-weight: 600;
+            }
+
+            Text {
+                text: root.copyright-text;
+                color: SigmaTheme.text-dim;
+                wrap: word-wrap;
+            }
+
+            Text {
+                text: "License";
+                color: SigmaTheme.text;
+                font-weight: 600;
+            }
+
+            Text {
+                text: root.license-notice;
+                color: SigmaTheme.text-dim;
+                wrap: word-wrap;
+                font-size: SigmaTheme.font-size-small;
+            }
+
+            Text {
+                text: "Credits";
+                color: SigmaTheme.text;
+                font-weight: 600;
+            }
+
+            Text {
+                text: root.credits-text;
+                color: SigmaTheme.text-dim;
+                wrap: word-wrap;
+                font-size: SigmaTheme.font-size-small;
+            }
+
+            Text {
+                text: "Direct dependencies (" + root.direct-deps.length + ")";
+                color: SigmaTheme.text;
+                font-weight: 600;
+            }
+
+            Rectangle {
+                background: SigmaTheme.surface;
+                border-radius: 4px;
+                border-width: 1px;
+                border-color: SigmaTheme.border;
+                VerticalLayout {
+                    padding: 4px;
+                    Rectangle {
+                        height: 24px;
+                        background: SigmaTheme.surface-raised;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 8px;
+                            Text { text: "Crate"; horizontal-stretch: 2; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            Text { text: "Version"; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            Text { text: "License"; horizontal-stretch: 2; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        }
+                    }
+                    for dep in root.direct-deps: Rectangle {
+                        height: 22px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 8px;
+                            Text { text: dep.name; horizontal-stretch: 2; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            Text { text: dep.version; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            Text { text: dep.license; horizontal-stretch: 2; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; vertical-alignment: center; wrap: no-wrap; overflow: elide; }
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "Third-party software";
+                color: SigmaTheme.text;
+                font-weight: 600;
+            }
+
+            Text {
+                text: root.transitive-summary;
+                color: SigmaTheme.text-dim;
+                wrap: word-wrap;
+                font-size: SigmaTheme.font-size-small;
+            }
+
+            Text {
+                text: "Full third-party notices";
+                color: SigmaTheme.text;
+                font-weight: 600;
+            }
+
+            Text {
+                text: root.full-notices;
+                color: SigmaTheme.text-dim;
+                wrap: word-wrap;
+                font-size: SigmaTheme.font-size-small;
+            }
+
+            Text {
+                text: "https://github.com/sigmatactical-org/can-viewer";
+                color: SigmaTheme.accent;
+                font-size: SigmaTheme.font-size-small;
+            }
+
+            Rectangle { height: 12px; }
+        }
+    }
+}

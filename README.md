@@ -16,6 +16,7 @@ Maintained by [Sigma Tactical Group](https://github.com/sigmatactical-org). See 
 
 - **MDF4 inspection** — load, filter, decode, and export CAN log files
 - **DBC decoding** — decode frames with DBC databases via [dbc-rs](https://github.com/sigmatactical-org/dbc-rs)
+- **DBC catalog** — fetch Sigma Racer schemas from [sigma-updates](https://github.com/sigmatactical-org/updates) (`Catalog` button on MDF4 and DBC tabs)
 - **Live capture** — SocketCAN capture on Linux with ring-buffer display and MDF4 export
 - **DBC editor** — create and edit messages, signals, nodes, and header metadata
 - **Native UI** — Slint desktop UI (no WebView or Node.js toolchain)
@@ -56,6 +57,20 @@ Options:
   -m, --mdf4 <PATH>   MDF4 file to load on startup
   -h, --help          Print help
 ```
+
+### Environment
+
+| Variable | Purpose |
+| --- | --- |
+| `SIGMA_UPDATES_URL` | Base URL of sigma-updates (default `http://updates.sigma.localtest.me:30080`) |
+
+Downloaded schemas are cached under `~/.config/can-viewer/dbc-cache/`.
+
+## Brand & artwork
+
+© Sigma Tactical Group. **All rights reserved.**
+
+The Sigma Tactical Group name, logos, marks, artwork, and visual identity are **proprietary**. They are not covered by this repository's source-code license. See [BRANDING.md](BRANDING.md).
 
 ## License
 

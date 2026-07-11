@@ -1,9 +1,11 @@
 import { SigmaTheme } from "theme.slint";
-import { AppTitle, SigmaMark } from "widgets/brand.slint";
+import { AppTitle } from "widgets/brand.slint";
 import { Mdf4Tab } from "tabs/mdf4_tab.slint";
 import { LiveTab } from "tabs/live_tab.slint";
 import { DbcTab } from "tabs/dbc_tab.slint";
-import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow } from "widgets/common.slint";
+import { AboutTab } from "tabs/about_tab.slint";
+import { DbcCatalogDialog } from "widgets/dbc_catalog.slint";
+import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow, DepRow, DbcCatalogRow } from "widgets/common.slint";
 
 export component SigmaCanViewer inherits Window {
     title: "CAN Viewer";
@@ -90,11 +92,43 @@ export component SigmaCanViewer inherits Window {
     in-out property <string> dbc-edit-node-comment: "";
     in-out property <int> dbc-editor-panel: 0;
 
-    VerticalLayout {
+    // About tab
+    in-out property <string> about-copyright: "";
+    in-out property <string> about-license-notice: "";
+    in-out property <string> about-credits: "";
+    in-out property <string> about-transitive-summary: "";
+    in-out property <string> about-full-notices: "";
+    in-out property <[DepRow]> about-direct-deps;
+
+    // DBC catalog (sigma-updates)
+    callback open-dbc-catalog();
+    callback dbc-catalog-refresh();
+    callback dbc-catalog-load();
+    callback dbc-catalog-close();
+    callback set-dbc-catalog-selected(int);
+    in-out property <bool> dbc-catalog-open: false;
+    in-out property <bool> dbc-catalog-busy: false;
+    in-out property <string> dbc-catalog-status: "";
+    in-out property <int> dbc-catalog-selected: -1;
+    in-out property <[DbcCatalogRow]> dbc-catalog-files;
+
+    main-layer := Rectangle {
+        width: 100%;
+        height: 100%;
+
+        VerticalLayout {
+            padding-top: 8px;
+            padding-left: 8px;
+            padding-right: 8px;
+            padding-bottom: 8px;
+            spacing: 8px;
+
         Rectangle {
-            height: 40px;
             background: SigmaTheme.surface-raised;
+            border-radius: 4px;
             HorizontalLayout {
+                padding-top: 8px;
+                padding-bottom: 8px;
                 padding-left: 12px;
                 padding-right: 12px;
                 spacing: 16px;
@@ -144,6 +178,7 @@ export component SigmaCanViewer inherits Window {
                 selected-frame-index <=> root.mdf4-selected-frame;
                 open-mdf4 => { root.open-mdf4(); }
                 open-dbc => { root.mdf4-open-dbc(); }
+                open-catalog => { root.open-dbc-catalog(); }
                 export-mdf4 => { root.export-mdf4(); }
                 apply-filters => { root.apply-filters(); }
                 clear-filters => { root.clear-filters(); }
@@ -200,6 +235,7 @@ export component SigmaCanViewer inherits Window {
                 editor-panel <=> root.dbc-editor-panel;
                 new-dbc => { root.new-dbc(); }
                 open-dbc => { root.dbc-open(); }
+                open-catalog => { root.open-dbc-catalog(); }
                 save-dbc => { root.save-dbc(); }
                 save-dbc-as => { root.save-dbc-as(); }
                 add-message => { root.add-message(); }
@@ -213,28 +249,32 @@ export component SigmaCanViewer inherits Window {
                 node-selected(index) => { root.node-selected(index); }
             }
 
-            if root.active-tab == 3: Rectangle {
+            if root.active-tab == 3: AboutTab {
                 width: 100%;
                 height: 100%;
-                background: SigmaTheme.background;
-                VerticalLayout {
-                    padding: 24px;
-                    spacing: 12px;
-                    HorizontalLayout {
-                        spacing: 12px;
-                        SigmaMark { width: 40px; height: 40px; }
-                        Text { text: "CAN Viewer"; color: SigmaTheme.text; font-size: 20px; font-weight: 700; vertical-alignment: center; }
-                    }
-                    Text { text: "Version " + root.version-text; color: SigmaTheme.text-dim; }
-                    Text { text: "Native Slint desktop application for CAN bus analysis."; color: SigmaTheme.text; }
-                    Text { text: "• MDF4 log inspection and export"; color: SigmaTheme.text-dim; }
-                    Text { text: "• Live SocketCAN capture (Linux)"; color: SigmaTheme.text-dim; }
-                    Text { text: "• DBC database editor"; color: SigmaTheme.text-dim; }
-                    Rectangle { height: 16px; }
-                    Text { text: "Built with dbc-rs and mdf4-rs"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
-                    Text { text: "https://github.com/sigmatactical-org/can-viewer"; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; }
-                }
+                version-text: root.version-text;
+                copyright-text: root.about-copyright;
+                license-notice: root.about-license-notice;
+                credits-text: root.about-credits;
+                transitive-summary: root.about-transitive-summary;
+                full-notices: root.about-full-notices;
+                direct-deps: root.about-direct-deps;
             }
+        }
+        }
+
+        DbcCatalogDialog {
+            width: 100%;
+            height: 100%;
+            open <=> root.dbc-catalog-open;
+            busy <=> root.dbc-catalog-busy;
+            status-text <=> root.dbc-catalog-status;
+            selected-index <=> root.dbc-catalog-selected;
+            files <=> root.dbc-catalog-files;
+            close => { root.dbc-catalog-close(); }
+            refresh => { root.dbc-catalog-refresh(); }
+            load-selected => { root.dbc-catalog-load(); }
+            file-selected(index) => { root.set-dbc-catalog-selected(index); }
         }
     }
 }

@@ -1,5 +1,13 @@
 # Licensing
 
+## Brand & artwork
+
+The Sigma Tactical Group name, logos, marks, artwork, and visual identity
+(including assets under `ui/assets/`) are **proprietary**. They are **not**
+covered by the dual-licensing model below. See [BRANDING.md](BRANDING.md).
+
+## Software
+
 can-viewer is available under a **dual-licensing** model:
 
 ## Open Source License (Default)
@@ -21,6 +29,7 @@ This means you can use can-viewer in:
 - Include copyright notices
 - Include license files
 - State any significant changes
+- Third-party crate notices are listed in the in-app **About** tab and generated at build time in `target/*/build/can-viewer-*/out/THIRD_PARTY_NOTICES.txt`
 
 ## Commercial License
 

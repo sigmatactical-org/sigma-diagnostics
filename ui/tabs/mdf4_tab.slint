@@ -5,6 +5,7 @@ import { FrameRow, SignalRow, ToolbarButton, StatusChip } from "../widgets/commo
 export component Mdf4Tab inherits Rectangle {
     callback open-mdf4();
     callback open-dbc();
+    callback open-catalog();
     callback export-mdf4();
     callback apply-filters();
     callback clear-filters();
@@ -30,6 +31,7 @@ export component Mdf4Tab inherits Rectangle {
             spacing: 8px;
             ToolbarButton { label: "Open MDF4"; clicked => { root.open-mdf4(); } }
             ToolbarButton { label: "Open DBC"; clicked => { root.open-dbc(); } }
+            ToolbarButton { label: "Catalog"; clicked => { root.open-catalog(); } }
             ToolbarButton { label: "Export"; clicked => { root.export-mdf4(); } }
             StatusChip { label: "DBC"; value: root.dbc-status; }
             StatusChip { label: "File"; value: root.mdf4-path == "" ? "—" : root.mdf4-path; }
@@ -90,31 +92,45 @@ export component Mdf4Tab inherits Rectangle {
 
             VerticalLayout {
                 horizontal-stretch: 1;
+                min-width: 240px;
                 spacing: 8px;
 
                 Rectangle {
-                    vertical-stretch: 0;
-                    height: 140px;
                     background: SigmaTheme.surface;
                     border-radius: 4px;
                     border-width: 1px;
                     border-color: SigmaTheme.border;
                     VerticalLayout {
-                        padding: 8px;
-                        spacing: 6px;
+                        padding: 10px;
+                        spacing: 8px;
                         Text { text: "Filters"; color: SigmaTheme.text; font-weight: 600; }
-                        HorizontalLayout {
-                            spacing: 6px;
-                            VerticalLayout {
-                                Text { text: "CAN ID"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
-                                LineEdit { text <=> root.filter-can-id; }
-                            }
-                            VerticalLayout {
-                                Text { text: "Message"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
-                                LineEdit { text <=> root.filter-message; }
+                        VerticalLayout {
+                            spacing: 4px;
+                            Text { text: "CAN ID"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
+                            LineEdit {
+                                min-height: 28px;
+                                text <=> root.filter-can-id;
+                                placeholder-text: "e.g. 0x123 or comma-separated";
                             }
                         }
-                        LineEdit { text <=> root.filter-data; placeholder-text: "Data hex filter"; }
+                        VerticalLayout {
+                            spacing: 4px;
+                            Text { text: "Message"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
+                            LineEdit {
+                                min-height: 28px;
+                                text <=> root.filter-message;
+                                placeholder-text: "Message name";
+                            }
+                        }
+                        VerticalLayout {
+                            spacing: 4px;
+                            Text { text: "Data (hex)"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
+                            LineEdit {
+                                min-height: 28px;
+                                text <=> root.filter-data;
+                                placeholder-text: "Data hex filter";
+                            }
+                        }
                         HorizontalLayout {
                             spacing: 6px;
                             ToolbarButton { label: "Apply"; clicked => { root.apply-filters(); } }

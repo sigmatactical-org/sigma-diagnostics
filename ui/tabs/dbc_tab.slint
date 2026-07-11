@@ -5,6 +5,7 @@ import { DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescR
 export component DbcTab inherits Rectangle {
     callback new-dbc();
     callback open-dbc();
+    callback open-catalog();
     callback save-dbc();
     callback save-dbc-as();
     callback add-message();
@@ -53,6 +54,7 @@ export component DbcTab inherits Rectangle {
             spacing: 8px;
             ToolbarButton { label: "New"; clicked => { root.new-dbc(); } }
             ToolbarButton { label: "Open"; clicked => { root.open-dbc(); } }
+            ToolbarButton { label: "Catalog"; clicked => { root.open-catalog(); } }
             ToolbarButton { label: "Save"; clicked => { root.save-dbc(); } }
             ToolbarButton { label: "Save As"; clicked => { root.save-dbc-as(); } }
             StatusChip {

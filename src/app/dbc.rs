@@ -101,6 +101,19 @@ impl DbcController {
         });
     }
 
+    /// Reload editor state after a DBC is fetched from sigma-updates.
+    pub fn on_external_dbc_loaded(&self) {
+        if let Ok(Some(info)) = get_dbc_info(&self.state) {
+            *self.edit_state.lock() = info;
+            *self.path.lock() = get_dbc_path(&self.state);
+            *self.dirty.lock() = false;
+            *self.selected_message.lock() = -1;
+            *self.selected_signal.lock() = -1;
+            *self.selected_node.lock() = -1;
+            self.refresh_ui();
+        }
+    }
+
     fn with_ui<F: FnOnce(&SigmaCanViewer)>(&self, f: F) {
         if let Some(ui) = self.ui.upgrade() {
             f(&ui);

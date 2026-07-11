@@ -33,6 +33,11 @@ impl SessionConfig {
         Self::config_dir().map(|p| p.join("session.json"))
     }
 
+    /// Cache directory for DBC files fetched from sigma-updates.
+    pub fn dbc_cache_dir() -> Option<PathBuf> {
+        Self::config_dir().map(|p| p.join("dbc-cache"))
+    }
+
     /// Load session config from disk, running first-time setup if needed.
     pub fn load() -> Self {
         // Load existing config or create default

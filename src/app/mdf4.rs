@@ -59,6 +59,12 @@ impl Mdf4Controller {
         });
     }
 
+    /// Refresh after a DBC is loaded from another source (e.g. updates catalog).
+    pub fn on_external_dbc_loaded(&self) {
+        self.refresh_dbc_status();
+        self.apply_filters();
+    }
+
     pub fn load_initial_files(&self) {
         let initial = crate::services::get_initial_files(&self.state);
         if let Some(path) = initial.dbc_path {

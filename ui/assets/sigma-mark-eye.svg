@@ -1,0 +1,16 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <defs>
+    <radialGradient id="emberGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff8a3a" stop-opacity="1" />
+      <stop offset="22%" stop-color="#ff3a00" stop-opacity="0.85" />
+      <stop offset="55%" stop-color="#d40000" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#900000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <g transform="translate(7.4 0)">
+    <circle cx="66" cy="36" r="11" fill="url(#emberGlow)" />
+    <circle cx="66" cy="36" r="4.2" fill="url(#emberGlow)" />
+    <circle cx="66" cy="36" r="2.4" fill="#ff1e00" fill-opacity="0.55" />
+    <circle cx="66" cy="36" r="1.05" fill="#ffcf86" />
+  </g>
+</svg>

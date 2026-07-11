@@ -84,6 +84,18 @@ export struct DbcValueDescRow {
     entries: string,
 }
 
+export struct DepRow {
+    name: string,
+    version: string,
+    license: string,
+}
+
+export struct DbcCatalogRow {
+    filename: string,
+    name: string,
+    size-text: string,
+}
+
 export component ToolbarButton inherits Rectangle {
     in property <string> label;
     callback clicked <=> touch.clicked;
