@@ -1,45 +1,29 @@
-//! CAN Viewer Library
+//! Sigma Tactical CAN Viewer library.
 //!
-//! Core functionality for the CAN Viewer application.
-//! This library can be used by the main binary or extended by pro versions.
+//! Native Slint desktop application for MDF4 inspection, SocketCAN capture,
+//! and DBC editing.
 
-pub mod commands;
+slint::include_modules!();
+
+pub mod app;
 pub mod config;
+pub mod dbc_export;
 pub mod decode;
 pub mod dto;
 pub mod live_capture;
+pub mod services;
 pub mod state;
 
-// Re-export commonly used types
 pub use state::{AppState, InitialFiles};
 
-// Re-export DTO types for use by pro crate
 pub use dto::{CanBpfFilter, CanFrameDto, DecodedSignalDto};
 
-// Re-export filter types, utilities, and commands for use by pro crate
-pub use commands::filter::{
-    DbcMessageCache,
-    DbcMessageInfo,
-    // Types
-    DlcDetectionResult,
-    FilterConfig,
-    FilterResult,
-    FrameStats,
-    MatchStatus,
-    MessageCount,
-    // Shared filter logic for pro crate
-    build_message_cache_from_dbc,
-    // Commands
-    calculate_frame_stats,
-    detect_dlc,
-    filter_frames_with_cache,
-    get_message_counts,
-    match_data_pattern,
-    parse_data_pattern,
+pub use services::filter::{
+    build_message_cache_from_dbc, calculate_frame_stats, detect_dlc, filter_frames,
+    filter_frames_with_cache, get_message_counts, match_data_pattern, parse_data_pattern,
+    DbcMessageCache, DbcMessageInfo, DlcDetectionResult, FilterConfig, FilterResult, FrameStats,
+    MatchStatus, MessageCount,
 };
 
-// Re-export MDF4 parsing utilities
-pub use commands::mdf::parse_can_dataframe;
-
-// Re-export config for session management
+pub use services::mdf::parse_can_dataframe;
 pub use config::SessionConfig;

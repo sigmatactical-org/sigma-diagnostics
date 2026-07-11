@@ -1,11 +1,6 @@
 # Rust
 target/
 
-# Node.js
-node_modules/
-
-# Build output (dist/ is tracked for cargo publish)
-
 # IDE
 .idea/
 *.swp

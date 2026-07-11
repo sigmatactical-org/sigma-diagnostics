@@ -1,0 +1,252 @@
+import { ListView, LineEdit } from "std-widgets.slint";
+import { SigmaTheme } from "../theme.slint";
+import { DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow, ToolbarButton, StatusChip } from "../widgets/common.slint";
+
+export component DbcTab inherits Rectangle {
+    callback new-dbc();
+    callback open-dbc();
+    callback save-dbc();
+    callback save-dbc-as();
+    callback add-message();
+    callback delete-message();
+    callback add-signal();
+    callback delete-signal();
+    callback add-node();
+    callback delete-node();
+    callback message-selected(int);
+    callback signal-selected(int);
+    callback node-selected(int);
+
+    in-out property <string> dbc-path: "";
+    in-out property <bool> dirty: false;
+    in-out property <string> version: "";
+    in-out property <string> comment: "";
+    in-out property <[DbcMessageRow]> messages;
+    in-out property <[DbcSignalRow]> signals;
+    in-out property <[DbcNodeRow]> nodes;
+    in-out property <[DbcAttributeRow]> attributes;
+    in-out property <[DbcValueDescRow]> value-descriptions;
+    in-out property <int> selected-message: -1;
+    in-out property <int> selected-signal: -1;
+    in-out property <int> selected-node: -1;
+    in-out property <string> edit-message-id: "";
+    in-out property <string> edit-message-name: "";
+    in-out property <string> edit-message-dlc: "8";
+    in-out property <string> edit-message-sender: "";
+    in-out property <string> edit-signal-name: "";
+    in-out property <string> edit-signal-start: "0";
+    in-out property <string> edit-signal-length: "8";
+    in-out property <string> edit-signal-factor: "1";
+    in-out property <string> edit-signal-offset: "0";
+    in-out property <string> edit-signal-unit: "";
+    in-out property <string> edit-node-name: "";
+    in-out property <string> edit-node-comment: "";
+    in-out property <int> editor-panel: 0;
+
+    background: SigmaTheme.background;
+
+    VerticalLayout {
+        padding: 8px;
+        spacing: 8px;
+
+        HorizontalLayout {
+            spacing: 8px;
+            ToolbarButton { label: "New"; clicked => { root.new-dbc(); } }
+            ToolbarButton { label: "Open"; clicked => { root.open-dbc(); } }
+            ToolbarButton { label: "Save"; clicked => { root.save-dbc(); } }
+            ToolbarButton { label: "Save As"; clicked => { root.save-dbc-as(); } }
+            StatusChip {
+                label: "File";
+                value: root.dbc-path == "" ? "Untitled" : root.dbc-path;
+            }
+            if root.dirty: StatusChip {
+                label: "";
+                value: "● Modified";
+                value-color: SigmaTheme.accent-amber;
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
+
+        HorizontalLayout {
+            spacing: 4px;
+            ToolbarButton { label: "Messages"; clicked => { root.editor-panel = 0; } }
+            ToolbarButton { label: "Signals"; clicked => { root.editor-panel = 1; } }
+            ToolbarButton { label: "Nodes"; clicked => { root.editor-panel = 2; } }
+            ToolbarButton { label: "Attributes"; clicked => { root.editor-panel = 4; } }
+            ToolbarButton { label: "Val Desc"; clicked => { root.editor-panel = 5; } }
+            ToolbarButton { label: "Header"; clicked => { root.editor-panel = 3; } }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+            vertical-stretch: 1;
+
+            Rectangle {
+                horizontal-stretch: 1;
+                background: SigmaTheme.surface;
+                border-radius: 4px;
+                border-width: 1px;
+                border-color: SigmaTheme.border;
+
+                if root.editor-panel == 0: VerticalLayout {
+                    padding: 4px;
+                    HorizontalLayout {
+                        spacing: 6px;
+                        ToolbarButton { label: "+ Message"; clicked => { root.add-message(); } }
+                        ToolbarButton { label: "− Message"; clicked => { root.delete-message(); } }
+                    }
+                    ListView {
+                        for msg[i] in root.messages: Rectangle {
+                            height: SigmaTheme.row-height;
+                            background: i == root.selected-message ? SigmaTheme.accent.transparentize(0.85) : transparent;
+                            TouchArea { clicked => { root.message-selected(i); } }
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                spacing: 8px;
+                                Text { text: msg.id; width: 80px; color: SigmaTheme.accent-amber; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: msg.name; width: 120px; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: msg.dlc; width: 30px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: msg.sender; width: 80px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: msg.signal-count; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            }
+                        }
+                    }
+                }
+
+                if root.editor-panel == 1: VerticalLayout {
+                    padding: 4px;
+                    HorizontalLayout {
+                        spacing: 6px;
+                        ToolbarButton { label: "+ Signal"; clicked => { root.add-signal(); } }
+                        ToolbarButton { label: "− Signal"; clicked => { root.delete-signal(); } }
+                    }
+                    ListView {
+                        for sig[i] in root.signals: Rectangle {
+                            height: SigmaTheme.row-height;
+                            background: i == root.selected-signal ? SigmaTheme.accent.transparentize(0.85) : transparent;
+                            TouchArea { clicked => { root.signal-selected(i); } }
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                spacing: 8px;
+                                Text { text: sig.name; width: 100px; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: sig.start-bit; width: 50px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: sig.length; width: 40px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: sig.factor; width: 60px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: sig.unit; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            }
+                        }
+                    }
+                }
+
+                if root.editor-panel == 2: VerticalLayout {
+                    padding: 4px;
+                    HorizontalLayout {
+                        spacing: 6px;
+                        ToolbarButton { label: "+ Node"; clicked => { root.add-node(); } }
+                        ToolbarButton { label: "− Node"; clicked => { root.delete-node(); } }
+                    }
+                    ListView {
+                        for node[i] in root.nodes: Rectangle {
+                            height: SigmaTheme.row-height;
+                            background: i == root.selected-node ? SigmaTheme.accent.transparentize(0.85) : transparent;
+                            TouchArea { clicked => { root.node-selected(i); } }
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                spacing: 8px;
+                                Text { text: node.name; width: 100px; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: node.comment; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            }
+                        }
+                    }
+                }
+
+                if root.editor-panel == 3: VerticalLayout {
+                    padding: 12px;
+                    spacing: 8px;
+                    Text { text: "DBC Header"; color: SigmaTheme.text; font-weight: 600; }
+                    VerticalLayout {
+                        Text { text: "Version"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
+                        LineEdit { text <=> root.version; }
+                    }
+                    VerticalLayout {
+                        Text { text: "Comment"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
+                        LineEdit { text <=> root.comment; }
+                    }
+                }
+
+                if root.editor-panel == 4: VerticalLayout {
+                    padding: 4px;
+                    Text { text: "Attribute definitions"; color: SigmaTheme.text-dim; padding-left: 8px; font-size: SigmaTheme.font-size-small; }
+                    ListView {
+                        for attr in root.attributes: Rectangle {
+                            height: SigmaTheme.row-height;
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                spacing: 8px;
+                                Text { text: attr.name; width: 120px; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: attr.object-type; width: 80px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: attr.value-summary; horizontal-stretch: 1; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            }
+                        }
+                    }
+                }
+
+                if root.editor-panel == 5: VerticalLayout {
+                    padding: 4px;
+                    Text { text: "Value descriptions (VAL_)"; color: SigmaTheme.text-dim; padding-left: 8px; font-size: SigmaTheme.font-size-small; }
+                    ListView {
+                        for vd in root.value-descriptions: Rectangle {
+                            height: SigmaTheme.row-height;
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                spacing: 8px;
+                                Text { text: vd.message-id; width: 80px; color: SigmaTheme.accent-amber; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: vd.signal-name; width: 100px; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                                Text { text: vd.entries; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: 280px;
+                background: SigmaTheme.surface;
+                border-radius: 4px;
+                border-width: 1px;
+                border-color: SigmaTheme.border;
+                VerticalLayout {
+                    padding: 12px;
+                    spacing: 8px;
+                    Text { text: "Details"; color: SigmaTheme.text; font-weight: 600; }
+
+                    if root.editor-panel == 0 || root.editor-panel == 1: VerticalLayout {
+                        spacing: 6px;
+                        if root.editor-panel == 0: VerticalLayout {
+                            spacing: 6px;
+                            VerticalLayout { Text { text: "ID (hex)"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-message-id; } }
+                            VerticalLayout { Text { text: "Name"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-message-name; } }
+                            VerticalLayout { Text { text: "DLC"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-message-dlc; } }
+                            VerticalLayout { Text { text: "Sender"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-message-sender; } }
+                        }
+                        if root.editor-panel == 1: VerticalLayout {
+                            spacing: 6px;
+                            VerticalLayout { Text { text: "Name"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-signal-name; } }
+                            VerticalLayout { Text { text: "Start bit"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-signal-start; } }
+                            VerticalLayout { Text { text: "Length"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-signal-length; } }
+                            VerticalLayout { Text { text: "Factor"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-signal-factor; } }
+                            VerticalLayout { Text { text: "Offset"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-signal-offset; } }
+                            VerticalLayout { Text { text: "Unit"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-signal-unit; } }
+                        }
+                    }
+
+                    if root.editor-panel == 2: VerticalLayout {
+                        spacing: 6px;
+                        VerticalLayout { Text { text: "Name"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-node-name; } }
+                        VerticalLayout { Text { text: "Comment"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; } LineEdit { text <=> root.edit-node-comment; } }
+                    }
+                }
+            }
+        }
+    }
+}

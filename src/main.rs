@@ -1,20 +1,13 @@
-//! CAN Viewer - A Tauri application for viewing CAN bus data.
-//!
-//! Supports:
-//! - Live capture from SocketCAN interfaces (Linux)
-//! - Loading MDF4 measurement files
-//! - DBC-based signal decoding
+//! Sigma Tactical CAN Viewer — native Slint desktop application.
 
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
-use can_viewer::{AppState, InitialFiles, base_commands};
+use can_viewer::app;
+use can_viewer::{AppState, InitialFiles};
 use clap::Parser;
 use std::sync::Arc;
-use tauri::{Manager, Runtime};
 
-/// CAN Data Viewer with MDF4 and SocketCAN support.
+/// MDF4, SocketCAN, and DBC analysis tool.
 #[derive(Parser, Debug)]
-#[command(author, version, about)]
+#[command(author, version, about = "Sigma Tactical CAN Viewer")]
 struct Args {
     /// DBC file to load on startup
     #[arg(short, long)]
@@ -26,33 +19,14 @@ struct Args {
 }
 
 fn main() {
-    let app_state = create_app_state();
+    env_logger::init();
 
-    tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_shell::init())
-        .manage(app_state)
-        .invoke_handler(base_commands!())
-        // Pro: add .setup(pro::setup) here
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-
-/// Create the application state from CLI args.
-fn create_app_state() -> Arc<AppState> {
     let args = Args::parse();
     let initial_files = InitialFiles {
         dbc_path: args.dbc,
         mdf4_path: args.mdf4,
     };
-    Arc::new(AppState::with_initial_files(initial_files))
-}
+    let state = Arc::new(AppState::with_initial_files(initial_files));
 
-/// Setup hook for app initialization.
-/// Pro versions can add their own setup logic.
-#[allow(dead_code)]
-fn setup<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
-    let _window = app.get_webview_window("main").unwrap();
-    // Pro: Initialize pro features here
-    Ok(())
+    app::run(state).expect("error while running application");
 }

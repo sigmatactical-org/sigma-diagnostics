@@ -1,0 +1,240 @@
+import { SigmaTheme } from "theme.slint";
+import { Mdf4Tab } from "tabs/mdf4_tab.slint";
+import { LiveTab } from "tabs/live_tab.slint";
+import { DbcTab } from "tabs/dbc_tab.slint";
+import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow } from "widgets/common.slint";
+
+export component SigmaCanViewer inherits Window {
+    title: "Sigma Tactical CAN Viewer";
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    background: SigmaTheme.background;
+
+    callback quit-app();
+    in-out property <string> status-text: "Ready";
+    in-out property <string> version-text: "0.3.0";
+    in-out property <int> active-tab: 0;
+
+    // MDF4 tab state
+    callback open-mdf4();
+    callback mdf4-open-dbc();
+    callback export-mdf4();
+    callback apply-filters();
+    callback clear-filters();
+    callback frame-selected(int);
+    in-out property <string> mdf4-path: "";
+    in-out property <string> mdf4-dbc-status: "No DBC";
+    in-out property <string> mdf4-frame-count: "0 frames";
+    in-out property <[FrameRow]> mdf4-frames;
+    in-out property <[SignalRow]> mdf4-signals;
+    in-out property <string> mdf4-filter-can-id: "";
+    in-out property <string> mdf4-filter-message: "";
+    in-out property <string> mdf4-filter-data: "";
+    in-out property <int> mdf4-selected-frame: -1;
+
+    // Live tab state
+    callback refresh-interfaces();
+    callback start-capture();
+    callback stop-capture();
+    callback export-capture();
+    in-out property <[string]> live-interfaces;
+    in-out property <int> live-selected-interface: 0;
+    in-out property <bool> live-capturing: false;
+    in-out property <string> live-capture-status: "Stopped";
+    in-out property <string> live-stats-text: "";
+    in-out property <bool> live-linux-only: true;
+    in-out property <[LiveMessageRow]> live-messages;
+    in-out property <[LiveSignalRow]> live-signals;
+    in-out property <[LiveFrameRow]> live-frames;
+    in-out property <[LiveErrorRow]> live-errors;
+    in-out property <int> live-view: 0;
+
+    // DBC tab state
+    callback new-dbc();
+    callback dbc-open();
+    callback save-dbc();
+    callback save-dbc-as();
+    callback add-message();
+    callback delete-message();
+    callback add-signal();
+    callback delete-signal();
+    callback add-node();
+    callback delete-node();
+    callback message-selected(int);
+    callback signal-selected(int);
+    callback node-selected(int);
+    in-out property <string> dbc-path: "";
+    in-out property <bool> dbc-dirty: false;
+    in-out property <string> dbc-version: "";
+    in-out property <string> dbc-comment: "";
+    in-out property <[DbcMessageRow]> dbc-messages;
+    in-out property <[DbcSignalRow]> dbc-signals;
+    in-out property <[DbcNodeRow]> dbc-nodes;
+    in-out property <[DbcAttributeRow]> dbc-attributes;
+    in-out property <[DbcValueDescRow]> dbc-value-descriptions;
+    in-out property <int> dbc-selected-message: -1;
+    in-out property <int> dbc-selected-signal: -1;
+    in-out property <int> dbc-selected-node: -1;
+    in-out property <string> dbc-edit-message-id: "";
+    in-out property <string> dbc-edit-message-name: "";
+    in-out property <string> dbc-edit-message-dlc: "8";
+    in-out property <string> dbc-edit-message-sender: "";
+    in-out property <string> dbc-edit-signal-name: "";
+    in-out property <string> dbc-edit-signal-start: "0";
+    in-out property <string> dbc-edit-signal-length: "8";
+    in-out property <string> dbc-edit-signal-factor: "1";
+    in-out property <string> dbc-edit-signal-offset: "0";
+    in-out property <string> dbc-edit-signal-unit: "";
+    in-out property <string> dbc-edit-node-name: "";
+    in-out property <string> dbc-edit-node-comment: "";
+    in-out property <int> dbc-editor-panel: 0;
+
+    VerticalLayout {
+        Rectangle {
+            height: 40px;
+            background: SigmaTheme.surface-raised;
+            HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 12px;
+                spacing: 16px;
+                Text {
+                    text: "Sigma Tactical CAN Viewer";
+                    color: SigmaTheme.text;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+                Rectangle { width: 1px; height: 24px; background: SigmaTheme.border; }
+                HorizontalLayout {
+                    spacing: 4px;
+                    for tab-label[i] in ["MDF4", "Live", "DBC", "About"]: Rectangle {
+                        height: 28px;
+                        min-width: 64px;
+                        background: root.active-tab == i ? SigmaTheme.accent.transparentize(0.8) : (touch.has-hover ? SigmaTheme.surface : transparent);
+                        border-radius: 4px;
+                        touch := TouchArea { clicked => { root.active-tab = i; } }
+                        Text {
+                            text: tab-label;
+                            color: root.active-tab == i ? SigmaTheme.accent : SigmaTheme.text-dim;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+                Rectangle { horizontal-stretch: 1; }
+                Text {
+                    text: root.status-text;
+                    color: SigmaTheme.text-dim;
+                    font-size: SigmaTheme.font-size-small;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+            clip: true;
+
+            if root.active-tab == 0: Mdf4Tab {
+                width: 100%;
+                height: 100%;
+                mdf4-path <=> root.mdf4-path;
+                dbc-status <=> root.mdf4-dbc-status;
+                frame-count <=> root.mdf4-frame-count;
+                frames <=> root.mdf4-frames;
+                signals <=> root.mdf4-signals;
+                filter-can-id <=> root.mdf4-filter-can-id;
+                filter-message <=> root.mdf4-filter-message;
+                filter-data <=> root.mdf4-filter-data;
+                selected-frame-index <=> root.mdf4-selected-frame;
+                open-mdf4 => { root.open-mdf4(); }
+                open-dbc => { root.mdf4-open-dbc(); }
+                export-mdf4 => { root.export-mdf4(); }
+                apply-filters => { root.apply-filters(); }
+                clear-filters => { root.clear-filters(); }
+                frame-selected(index) => { root.frame-selected(index); }
+            }
+
+            if root.active-tab == 1: LiveTab {
+                width: 100%;
+                height: 100%;
+                interfaces <=> root.live-interfaces;
+                selected-interface <=> root.live-selected-interface;
+                capturing <=> root.live-capturing;
+                capture-status <=> root.live-capture-status;
+                stats-text <=> root.live-stats-text;
+                linux-only <=> root.live-linux-only;
+                messages <=> root.live-messages;
+                signals <=> root.live-signals;
+                frames <=> root.live-frames;
+                errors <=> root.live-errors;
+                live-view <=> root.live-view;
+                refresh-interfaces => { root.refresh-interfaces(); }
+                start-capture => { root.start-capture(); }
+                stop-capture => { root.stop-capture(); }
+                export-capture => { root.export-capture(); }
+            }
+
+            if root.active-tab == 2: DbcTab {
+                width: 100%;
+                height: 100%;
+                dbc-path <=> root.dbc-path;
+                dirty <=> root.dbc-dirty;
+                version <=> root.dbc-version;
+                comment <=> root.dbc-comment;
+                messages <=> root.dbc-messages;
+                signals <=> root.dbc-signals;
+                nodes <=> root.dbc-nodes;
+                attributes <=> root.dbc-attributes;
+                value-descriptions <=> root.dbc-value-descriptions;
+                selected-message <=> root.dbc-selected-message;
+                selected-signal <=> root.dbc-selected-signal;
+                selected-node <=> root.dbc-selected-node;
+                edit-message-id <=> root.dbc-edit-message-id;
+                edit-message-name <=> root.dbc-edit-message-name;
+                edit-message-dlc <=> root.dbc-edit-message-dlc;
+                edit-message-sender <=> root.dbc-edit-message-sender;
+                edit-signal-name <=> root.dbc-edit-signal-name;
+                edit-signal-start <=> root.dbc-edit-signal-start;
+                edit-signal-length <=> root.dbc-edit-signal-length;
+                edit-signal-factor <=> root.dbc-edit-signal-factor;
+                edit-signal-offset <=> root.dbc-edit-signal-offset;
+                edit-signal-unit <=> root.dbc-edit-signal-unit;
+                edit-node-name <=> root.dbc-edit-node-name;
+                edit-node-comment <=> root.dbc-edit-node-comment;
+                editor-panel <=> root.dbc-editor-panel;
+                new-dbc => { root.new-dbc(); }
+                open-dbc => { root.dbc-open(); }
+                save-dbc => { root.save-dbc(); }
+                save-dbc-as => { root.save-dbc-as(); }
+                add-message => { root.add-message(); }
+                delete-message => { root.delete-message(); }
+                add-signal => { root.add-signal(); }
+                delete-signal => { root.delete-signal(); }
+                add-node => { root.add-node(); }
+                delete-node => { root.delete-node(); }
+                message-selected(index) => { root.message-selected(index); }
+                signal-selected(index) => { root.signal-selected(index); }
+                node-selected(index) => { root.node-selected(index); }
+            }
+
+            if root.active-tab == 3: Rectangle {
+                width: 100%;
+                height: 100%;
+                background: SigmaTheme.background;
+                VerticalLayout {
+                    padding: 24px;
+                    spacing: 12px;
+                    Text { text: "Sigma Tactical CAN Viewer"; color: SigmaTheme.text; font-size: 20px; font-weight: 700; }
+                    Text { text: "Version " + root.version-text; color: SigmaTheme.text-dim; }
+                    Text { text: "Native Slint desktop application for CAN bus analysis."; color: SigmaTheme.text; }
+                    Text { text: "• MDF4 log inspection and export"; color: SigmaTheme.text-dim; }
+                    Text { text: "• Live SocketCAN capture (Linux)"; color: SigmaTheme.text-dim; }
+                    Text { text: "• DBC database editor"; color: SigmaTheme.text-dim; }
+                    Rectangle { height: 16px; }
+                    Text { text: "Built with dbc-rs and mdf4-rs"; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; }
+                    Text { text: "https://github.com/sigmatactical-org/can-viewer"; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; }
+                }
+            }
+        }
+    }
+}

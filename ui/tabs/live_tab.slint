@@ -1,0 +1,134 @@
+import { ListView, ComboBox } from "std-widgets.slint";
+import { SigmaTheme } from "../theme.slint";
+import { LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, ToolbarButton, StatusChip } from "../widgets/common.slint";
+
+export component LiveTab inherits Rectangle {
+    callback refresh-interfaces();
+    callback start-capture();
+    callback stop-capture();
+    callback export-capture();
+
+    in-out property <[string]> interfaces;
+    in-out property <int> selected-interface: 0;
+    in-out property <bool> capturing: false;
+    in-out property <string> capture-status: "Stopped";
+    in-out property <string> stats-text: "";
+    in-out property <bool> linux-only: true;
+    in-out property <[LiveMessageRow]> messages;
+    in-out property <[LiveSignalRow]> signals;
+    in-out property <[LiveFrameRow]> frames;
+    in-out property <[LiveErrorRow]> errors;
+    in-out property <int> live-view: 0;
+
+    background: SigmaTheme.background;
+
+    VerticalLayout {
+        padding: 8px;
+        spacing: 8px;
+
+        if !root.linux-only: Rectangle {
+            height: 48px;
+            background: SigmaTheme.accent-amber.transparentize(0.8);
+            border-radius: 4px;
+            Text {
+                text: "Live SocketCAN capture is only available on Linux.";
+                color: SigmaTheme.text;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 8px;
+            ComboBox {
+                model: root.interfaces;
+                current-index <=> root.selected-interface;
+                min-width: 160px;
+            }
+            ToolbarButton { label: "Refresh"; clicked => { root.refresh-interfaces(); } }
+            if !root.capturing: ToolbarButton { label: "Start"; clicked => { root.start-capture(); } }
+            if root.capturing: ToolbarButton { label: "Stop"; clicked => { root.stop-capture(); } }
+            ToolbarButton { label: "Export MDF4"; clicked => { root.export-capture(); } }
+            StatusChip {
+                label: "Status";
+                value: root.capture-status;
+                value-color: root.capturing ? SigmaTheme.accent-green : SigmaTheme.text-dim;
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Text { text: root.stats-text; color: SigmaTheme.text-dim; vertical-alignment: center; }
+        }
+
+        HorizontalLayout {
+            spacing: 4px;
+            ToolbarButton { label: "Messages"; clicked => { root.live-view = 0; } }
+            ToolbarButton { label: "Signals"; clicked => { root.live-view = 1; } }
+            ToolbarButton { label: "Frames"; clicked => { root.live-view = 2; } }
+            ToolbarButton { label: "Errors"; clicked => { root.live-view = 3; } }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+            background: SigmaTheme.surface;
+            border-radius: 4px;
+            border-width: 1px;
+            border-color: SigmaTheme.border;
+
+            if root.live-view == 0: ListView {
+                for row in root.messages: Rectangle {
+                    height: SigmaTheme.row-height;
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        spacing: 8px;
+                        Text { text: row.can-id; width: 80px; color: SigmaTheme.accent-amber; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.message-name; width: 140px; color: SigmaTheme.accent-green; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.data-hex; horizontal-stretch: 1; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.count; width: 60px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.rate; width: 60px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                    }
+                }
+            }
+            if root.live-view == 1: ListView {
+                for row in root.signals: Rectangle {
+                    height: SigmaTheme.row-height;
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        spacing: 8px;
+                        Text { text: row.message-name; width: 120px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.signal-name; width: 100px; color: SigmaTheme.accent; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.value; width: 80px; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.unit; width: 40px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.min-value + " / " + row.max-value; horizontal-stretch: 1; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                    }
+                }
+            }
+            if root.live-view == 2: ListView {
+                for row in root.frames: Rectangle {
+                    height: SigmaTheme.row-height;
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        spacing: 8px;
+                        Text { text: row.timestamp; width: 100px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.can-id; width: 80px; color: SigmaTheme.accent-amber; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.dlc; width: 30px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.data-hex; horizontal-stretch: 1; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.flags; width: 60px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                    }
+                }
+            }
+            if root.live-view == 3: ListView {
+                for row in root.errors: Rectangle {
+                    height: SigmaTheme.row-height;
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        spacing: 8px;
+                        Text { text: row.timestamp; width: 100px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.channel; width: 60px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.error-type; width: 100px; color: SigmaTheme.accent-red; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.details; horizontal-stretch: 1; color: SigmaTheme.text; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                        Text { text: row.count; width: 40px; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+                    }
+                }
+            }
+        }
+    }
+}

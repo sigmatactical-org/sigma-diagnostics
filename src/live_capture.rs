@@ -3,7 +3,10 @@
 //! Handles signal decoding and statistics for live display.
 //! MDF4 logging happens in the socket thread for lossless capture.
 
-use crate::dto::{CanFrameDto, CaptureStatsDto, LiveCaptureUpdate, StatsHtml};
+use crate::dto::{
+    CanFrameDto, CaptureStatsDto, LiveCaptureDisplay, LiveCaptureUpdate, LiveErrorRow,
+    LiveFrameRow, LiveMessageRow, LiveSignalRow, StatsHtml,
+};
 use dbc_rs::FastDbc;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
@@ -446,7 +449,7 @@ impl LiveCaptureState {
 
         // Sort errors by count for display
         let mut error_types: Vec<_> = self.errors.values().collect();
-        error_types.sort_by(|a, b| b.count.cmp(&a.count));
+        error_types.sort_by_key(|b| std::cmp::Reverse(b.count));
 
         // Render error summary rows
         for e in error_types {
@@ -479,6 +482,120 @@ impl LiveCaptureState {
             signals_html,
             frames_html,
             errors_html,
+            stats_html,
+            message_count: self.messages.len() as u32,
+            signal_count: self.signals.len() as u32,
+            frame_count: self.recent_frames.len(),
+            error_count: self.total_error_count as u32,
+        }
+    }
+
+    /// Structured update for Slint UI (no HTML).
+    pub fn generate_display(&self) -> LiveCaptureDisplay {
+        let elapsed = self.start_time.elapsed().as_secs_f64();
+        let stats = CaptureStatsDto {
+            frame_count: self.frame_count,
+            message_count: self.messages.len() as u32,
+            signal_count: self.signals.len() as u32,
+            frame_rate: self.frame_rate,
+            elapsed_secs: elapsed,
+            capture_file: Some(self.capture_file.clone()),
+        };
+
+        let mut messages: Vec<_> = self.messages.values().collect();
+        messages.sort_by_key(|e| e.can_id);
+        let messages = messages
+            .iter()
+            .map(|e| LiveMessageRow {
+                can_id: format!("0x{:03X}", e.can_id),
+                message_name: e.message_name.clone(),
+                data_hex: e
+                    .data
+                    .iter()
+                    .map(|b| format!("{:02X}", b))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                count: e.count.to_string(),
+                rate: format!("{:.1}/s", e.rate),
+            })
+            .collect();
+
+        let mut signals: Vec<_> = self.signals.values().collect();
+        signals.sort_by(|a, b| {
+            a.message_name
+                .cmp(&b.message_name)
+                .then_with(|| a.signal_name.cmp(&b.signal_name))
+        });
+        let signals = signals
+            .iter()
+            .map(|e| {
+                let value_str = if e.value.abs() >= 1000.0 {
+                    format!("{:.0}", e.value)
+                } else if e.value.abs() >= 100.0 {
+                    format!("{:.1}", e.value)
+                } else if e.value.fract() == 0.0 && e.value.abs() < 100.0 {
+                    format!("{:.0}", e.value)
+                } else {
+                    format!("{:.2}", e.value)
+                };
+                LiveSignalRow {
+                    message_name: e.message_name.clone(),
+                    signal_name: e.signal_name.clone(),
+                    value: value_str,
+                    unit: e.unit.clone(),
+                    min_value: format!("{:.2}", e.min_value),
+                    max_value: format!("{:.2}", e.max_value),
+                }
+            })
+            .collect();
+
+        let frames = self
+            .recent_frames
+            .iter()
+            .take(MAX_RECENT_FRAMES)
+            .map(|f| LiveFrameRow {
+                timestamp: format!("{:.6}", f.timestamp),
+                can_id: format!("0x{:03X}", f.can_id),
+                dlc: f.dlc.to_string(),
+                data_hex: f
+                    .data
+                    .iter()
+                    .map(|b| format!("{:02X}", b))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+                flags: Self::format_flags(f).to_string(),
+            })
+            .collect();
+
+        let mut error_types: Vec<_> = self.errors.values().collect();
+        error_types.sort_by_key(|b| std::cmp::Reverse(b.count));
+        let errors = error_types
+            .iter()
+            .map(|e| LiveErrorRow {
+                timestamp: format!("{:.6}", e.timestamp),
+                channel: e.channel.clone(),
+                error_type: e.error_type.clone(),
+                details: e.details.clone(),
+                count: e.count.to_string(),
+            })
+            .collect();
+
+        let secs = elapsed as u64;
+        let mins = secs / 60;
+        let remaining_secs = secs % 60;
+        let stats_html = StatsHtml {
+            message_count: self.messages.len().to_string(),
+            frame_count: self.frame_count.to_string(),
+            frame_rate: format!("{:.0}/s", self.frame_rate),
+            elapsed: format!("{}:{:02}", mins, remaining_secs),
+        };
+
+        LiveCaptureDisplay {
+            stats,
+            messages,
+            signals,
+            frames,
+            errors,
             stats_html,
             message_count: self.messages.len() as u32,
             signal_count: self.signals.len() as u32,

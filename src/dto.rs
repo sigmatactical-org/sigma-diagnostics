@@ -379,7 +379,7 @@ impl CanErrorDto {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Capture statistics.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CaptureStatsDto {
     pub frame_count: u64,
     pub message_count: u32,
@@ -390,7 +390,7 @@ pub struct CaptureStatsDto {
 }
 
 /// Pre-rendered stats strings for frontend.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StatsHtml {
     pub message_count: String,
     pub frame_count: String,
@@ -398,7 +398,7 @@ pub struct StatsHtml {
     pub elapsed: String,
 }
 
-/// Periodic update sent to frontend during live capture.
+/// Periodic update sent during live capture (legacy HTML rendering).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LiveCaptureUpdate {
     pub stats: CaptureStatsDto,
@@ -418,3 +418,109 @@ pub struct LiveCaptureUpdate {
     pub frame_count: usize,
     pub error_count: u32,
 }
+
+/// Row for live message monitor (Slint UI).
+#[derive(Debug, Clone, Default)]
+pub struct LiveMessageRow {
+    pub can_id: String,
+    pub message_name: String,
+    pub data_hex: String,
+    pub count: String,
+    pub rate: String,
+}
+
+/// Row for live signal monitor (Slint UI).
+#[derive(Debug, Clone, Default)]
+pub struct LiveSignalRow {
+    pub message_name: String,
+    pub signal_name: String,
+    pub value: String,
+    pub unit: String,
+    pub min_value: String,
+    pub max_value: String,
+}
+
+/// Row for live frame stream (Slint UI).
+#[derive(Debug, Clone, Default)]
+pub struct LiveFrameRow {
+    pub timestamp: String,
+    pub can_id: String,
+    pub dlc: String,
+    pub data_hex: String,
+    pub flags: String,
+}
+
+/// Row for live error monitor (Slint UI).
+#[derive(Debug, Clone, Default)]
+pub struct LiveErrorRow {
+    pub timestamp: String,
+    pub channel: String,
+    pub error_type: String,
+    pub details: String,
+    pub count: String,
+}
+
+/// Structured live capture data for Slint binding.
+#[derive(Debug, Clone, Default)]
+pub struct LiveCaptureDisplay {
+    pub stats: CaptureStatsDto,
+    pub messages: Vec<LiveMessageRow>,
+    pub signals: Vec<LiveSignalRow>,
+    pub frames: Vec<LiveFrameRow>,
+    pub errors: Vec<LiveErrorRow>,
+    pub stats_html: StatsHtml,
+    pub message_count: u32,
+    pub signal_count: u32,
+    pub frame_count: usize,
+    pub error_count: u32,
+}
+
+/// Table row for MDF4 / filtered frames.
+#[derive(Debug, Clone, Default)]
+pub struct FrameTableRow {
+    pub index: i32,
+    pub timestamp: String,
+    pub can_id: String,
+    pub channel: String,
+    pub dlc: String,
+    pub data_hex: String,
+    pub message_name: String,
+}
+
+/// Decoded signal row for side panel.
+#[derive(Debug, Clone, Default)]
+pub struct SignalTableRow {
+    pub signal_name: String,
+    pub value: String,
+    pub unit: String,
+    pub raw_value: String,
+    pub description: String,
+}
+
+/// DBC message list row.
+#[derive(Debug, Clone, Default)]
+pub struct DbcMessageRow {
+    pub id: String,
+    pub name: String,
+    pub dlc: String,
+    pub sender: String,
+    pub signal_count: String,
+}
+
+/// DBC signal list row.
+#[derive(Debug, Clone, Default)]
+pub struct DbcSignalRow {
+    pub name: String,
+    pub start_bit: String,
+    pub length: String,
+    pub factor: String,
+    pub unit: String,
+}
+
+/// DBC node row.
+#[derive(Debug, Clone, Default)]
+pub struct DbcNodeRow {
+    pub name: String,
+    pub comment: String,
+}
+

@@ -4,9 +4,6 @@ use crate::config::SessionConfig;
 use dbc_rs::{Dbc, FastDbc};
 use parking_lot::Mutex;
 
-#[cfg(target_os = "linux")]
-use tokio::sync::oneshot;
-
 /// Initial file paths from command line arguments.
 #[derive(Default)]
 pub struct InitialFiles {
@@ -14,12 +11,12 @@ pub struct InitialFiles {
     pub mdf4_path: Option<String>,
 }
 
-/// Type alias for the stop channel sender.
-/// Sends a result channel that will receive the finalized file path.
+/// Channel used to request capture stop and receive the finalize result sender.
 #[cfg(target_os = "linux")]
-pub type CaptureStopTx = oneshot::Sender<oneshot::Sender<Result<String, String>>>;
+pub type CaptureStopTx =
+    std::sync::mpsc::Sender<std::sync::mpsc::Sender<Result<String, String>>>;
 
-/// Global application state shared across Tauri commands.
+/// Global application state shared across services.
 pub struct AppState {
     /// Loaded DBC database for signal decoding.
     pub dbc: Mutex<Option<Dbc>>,

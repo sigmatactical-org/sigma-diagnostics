@@ -9,7 +9,7 @@
 
 use dbc_rs::Dbc;
 use mdf4_rs::MDF;
-use mdf4_rs::can::{CanDbcLogger, RawCanLogger};
+use mdf4_rs::can::{CanDbcLogger, Dbc as Mdf4Dbc, RawCanLogger};
 
 /// The complete.dbc file content from can-frame-generator.
 const COMPLETE_DBC: &str = r#"VERSION "2.0"
@@ -154,7 +154,8 @@ fn generate_test_mdf4_raw(dbc: &Dbc) -> Vec<u8> {
     logger.finalize().expect("Failed to finalize MDF4")
 }
 
-fn generate_test_mdf4_decoded(dbc: &Dbc) -> Vec<u8> {
+fn generate_test_mdf4_decoded() -> Vec<u8> {
+    let dbc = Mdf4Dbc::parse(COMPLETE_DBC).expect("Failed to parse DBC for MDF4 logger");
     let mut logger = CanDbcLogger::builder(dbc.clone())
         .store_raw_values(false)
         .include_units(true)
@@ -348,11 +349,8 @@ fn test_load_decoded_mdf4() {
     println!("Integration Test: Load Pre-Decoded MDF4");
     println!("{}\n", "=".repeat(80));
 
-    // Parse DBC
-    let dbc = Dbc::parse(COMPLETE_DBC).expect("Failed to parse DBC");
-
     // Generate test MDF4 file with decoded signals
-    let mdf_bytes = generate_test_mdf4_decoded(&dbc);
+    let mdf_bytes = generate_test_mdf4_decoded();
     let temp_path = std::env::temp_dir().join("can_viewer_decoded_test.mf4");
     std::fs::write(&temp_path, &mdf_bytes).expect("Failed to write MDF4");
     println!("Generated decoded MDF4: {} bytes", mdf_bytes.len());
@@ -511,7 +509,7 @@ fn test_signal_decoding_accuracy() {
             .iter()
             .find(|s| s.name == signal_name)
             .map(|s| s.value)
-            .expect(&format!("Signal {} not found", signal_name));
+            .unwrap_or_else(|| panic!("Signal {signal_name} not found"));
 
         let error = (decoded_value - expected_value).abs();
         println!(

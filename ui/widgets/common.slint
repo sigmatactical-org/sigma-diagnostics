@@ -1,0 +1,120 @@
+import { SigmaTheme } from "../theme.slint";
+
+export struct FrameRow {
+    index: int,
+    timestamp: string,
+    can-id: string,
+    channel: string,
+    dlc: string,
+    data-hex: string,
+    message-name: string,
+}
+
+export struct SignalRow {
+    signal-name: string,
+    value: string,
+    unit: string,
+    raw-value: string,
+    description: string,
+}
+
+export struct LiveMessageRow {
+    can-id: string,
+    message-name: string,
+    data-hex: string,
+    count: string,
+    rate: string,
+}
+
+export struct LiveSignalRow {
+    message-name: string,
+    signal-name: string,
+    value: string,
+    unit: string,
+    min-value: string,
+    max-value: string,
+}
+
+export struct LiveFrameRow {
+    timestamp: string,
+    can-id: string,
+    dlc: string,
+    data-hex: string,
+    flags: string,
+}
+
+export struct LiveErrorRow {
+    timestamp: string,
+    channel: string,
+    error-type: string,
+    details: string,
+    count: string,
+}
+
+export struct DbcMessageRow {
+    id: string,
+    name: string,
+    dlc: string,
+    sender: string,
+    signal-count: string,
+}
+
+export struct DbcSignalRow {
+    name: string,
+    start-bit: string,
+    length: string,
+    factor: string,
+    unit: string,
+}
+
+export struct DbcNodeRow {
+    name: string,
+    comment: string,
+}
+
+export struct DbcAttributeRow {
+    name: string,
+    object-type: string,
+    value-summary: string,
+}
+
+export struct DbcValueDescRow {
+    message-id: string,
+    signal-name: string,
+    entries: string,
+}
+
+export component ToolbarButton inherits Rectangle {
+    in property <string> label;
+    callback clicked <=> touch.clicked;
+    height: 32px;
+    background: touch.pressed ? SigmaTheme.surface-raised : SigmaTheme.surface;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: SigmaTheme.border;
+    touch := TouchArea { }
+    Text {
+        text: root.label;
+        color: SigmaTheme.text;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+export component StatusChip inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <brush> value-color: SigmaTheme.text-dim;
+    height: 24px;
+    background: SigmaTheme.surface;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: SigmaTheme.border;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 6px;
+        Text { text: root.label; color: SigmaTheme.text-dim; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+        Text { text: root.value; color: root.value-color; font-size: SigmaTheme.font-size-small; vertical-alignment: center; }
+    }
+}
