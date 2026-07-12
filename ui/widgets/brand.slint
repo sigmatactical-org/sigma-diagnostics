@@ -46,11 +46,13 @@ export component SigmaMark inherits Rectangle {
 
 export component AppTitle inherits HorizontalLayout {
     spacing: 8px;
+    alignment: center;
     SigmaMark {}
     Text {
         text: "CAN Viewer";
         color: SigmaTheme.text;
         font-weight: 700;
+        font-size: 15px;
         vertical-alignment: center;
     }
 }

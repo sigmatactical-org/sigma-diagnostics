@@ -38,6 +38,31 @@ impl SessionConfig {
         Self::config_dir().map(|p| p.join("dbc-cache"))
     }
 
+    /// Cache directory for MDF4 files opened via the header button.
+    pub fn mdf4_cache_dir() -> Option<PathBuf> {
+        Self::config_dir().map(|p| p.join("mdf4-cache"))
+    }
+
+    /// Copy `src` into `cache_dir` under its file name and return the cache path.
+    pub fn cache_file(src: &std::path::Path, cache_dir: &std::path::Path) -> Result<PathBuf, String> {
+        fs::create_dir_all(cache_dir).map_err(|e| format!("Failed to create cache dir: {e}"))?;
+        let name = src
+            .file_name()
+            .ok_or_else(|| "Invalid source path".to_string())?;
+        let dest = cache_dir.join(name);
+        fs::copy(src, &dest).map_err(|e| format!("Failed to cache file: {e}"))?;
+        Ok(dest)
+    }
+
+    /// Write UTF-8 content into the DBC cache and return the path.
+    pub fn cache_dbc_bytes(filename: &str, content: &str) -> Result<PathBuf, String> {
+        let cache_dir = Self::dbc_cache_dir().ok_or("Could not determine DBC cache directory")?;
+        fs::create_dir_all(&cache_dir).map_err(|e| format!("Failed to create DBC cache: {e}"))?;
+        let path = cache_dir.join(filename);
+        fs::write(&path, content).map_err(|e| format!("Failed to write DBC cache: {e}"))?;
+        Ok(path)
+    }
+
     /// Load session config from disk, running first-time setup if needed.
     pub fn load() -> Self {
         // Load existing config or create default

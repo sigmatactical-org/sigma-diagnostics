@@ -1,23 +1,27 @@
 //! MDF4 inspector tab controller.
 
 use super::helpers::{
-    format_can_id, format_data_hex, parse_can_ids, pick_open_file, pick_save_file, set_status,
-    vec_model,
+    format_can_id, format_data_hex, parse_can_ids, pick_open_file, pick_save_file, vec_model,
 };
+use crate::config::SessionConfig;
 use crate::dto::{CanFrameDto, FrameTableRow};
 use crate::services::{
-    decode_single_frame, export_logs, filter_frames, get_dbc_path, load_dbc, load_mdf4,
-    FilterConfig, MatchStatus,
+    decode_single_frame, export_logs, fetch_latest_dbc_content, filter_frames, get_dbc_path,
+    load_dbc, load_mdf4, save_dbc_content, FilterConfig, MatchStatus, UpdatesConfig,
 };
 use crate::state::AppState;
 use crate::{FrameRow, SigmaCanViewer, SignalRow};
 use parking_lot::Mutex;
 use slint::{ModelRc, Weak};
-use std::sync::Arc;
+use std::path::Path;
+use std::sync::{Arc, Weak as StdWeak};
+
+use super::dbc::DbcController;
 
 pub struct Mdf4Controller {
     state: Arc<AppState>,
     ui: Weak<SigmaCanViewer>,
+    dbc_editor: Mutex<StdWeak<DbcController>>,
     all_frames: Mutex<Vec<CanFrameDto>>,
     filtered_frames: Mutex<Vec<CanFrameDto>>,
 }
@@ -27,9 +31,15 @@ impl Mdf4Controller {
         Self {
             state,
             ui,
+            dbc_editor: Mutex::new(StdWeak::new()),
             all_frames: Mutex::new(Vec::new()),
             filtered_frames: Mutex::new(Vec::new()),
         }
+    }
+
+    /// Wire the DBC editor so master DBC loads refresh that tab.
+    pub fn set_dbc_editor(&self, dbc: StdWeak<DbcController>) {
+        *self.dbc_editor.lock() = dbc;
     }
 
     pub fn wire(self: Arc<Self>, ui: &SigmaCanViewer) {
@@ -63,16 +73,40 @@ impl Mdf4Controller {
     pub fn on_external_dbc_loaded(&self) {
         self.refresh_dbc_status();
         self.apply_filters();
+        self.notify_dbc_editor();
+    }
+
+    /// Sync header DBC button from the shared app state (after editor save/new).
+    pub fn sync_dbc_header_from_state(&self) {
+        self.refresh_dbc_status();
+        self.apply_filters();
+    }
+
+    fn notify_dbc_editor(&self) {
+        if let Some(dbc) = self.dbc_editor.lock().upgrade() {
+            dbc.on_external_dbc_loaded();
+        }
     }
 
     pub fn load_initial_files(&self) {
-        let initial = crate::services::get_initial_files(&self.state);
-        if let Some(path) = initial.dbc_path {
-            match load_dbc(&path, &self.state) {
-                Ok(_) => self.refresh_dbc_status(),
-                Err(e) => log::warn!("Startup DBC load failed ({path}): {e}"),
+        // Prefer the latest Sigma Racer DBC from updates (cached locally).
+        if let Err(e) = self.load_latest_dbc_from_updates() {
+            log::warn!("Updates DBC fetch skipped: {e}");
+            let initial = crate::services::get_initial_files(&self.state);
+            if let Some(path) = initial.dbc_path {
+                match load_dbc(&path, &self.state) {
+                    Ok(_) => {
+                        self.refresh_dbc_status();
+                        self.notify_dbc_editor();
+                    }
+                    Err(err) => log::warn!("Startup DBC load failed ({path}): {err}"),
+                }
             }
+        } else {
+            self.notify_dbc_editor();
         }
+
+        let initial = crate::services::get_initial_files(&self.state);
         if let Some(path) = initial.mdf4_path {
             self.load_mdf4_path(&path, true);
         }
@@ -87,29 +121,45 @@ impl Mdf4Controller {
     fn refresh_dbc_status(&self) {
         self.with_ui(|ui| {
             if let Some(path) = get_dbc_path(&self.state) {
-                let name = std::path::Path::new(&path)
+                let name = Path::new(&path)
                     .file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or(&path);
                 ui.set_mdf4_dbc_status(name.to_string().into());
+                ui.set_mdf4_dbc_file_name(name.to_string().into());
             } else {
                 ui.set_mdf4_dbc_status("No DBC".into());
+                ui.set_mdf4_dbc_file_name("".into());
             }
         });
     }
 
     fn open_mdf4(&self) {
         if let Some(path) = pick_open_file("Open MDF4", &[("MDF4", &["mf4", "mdf"])]) {
-            self.load_mdf4_path(&path, false);
+            match self.cache_mdf4_file(Path::new(&path)) {
+                Ok(cached) => self.load_mdf4_path(&cached, false),
+                Err(e) => self.with_ui(|ui| {
+                    ui.set_mdf4_frame_count(format!("Cache failed: {e}").into());
+                }),
+            }
         }
     }
 
+    fn cache_mdf4_file(&self, src: &Path) -> Result<String, String> {
+        let cache_dir =
+            SessionConfig::mdf4_cache_dir().ok_or("Could not determine MDF4 cache directory")?;
+        let dest = SessionConfig::cache_file(src, &cache_dir)?;
+        Ok(dest.to_string_lossy().into_owned())
+    }
+
     fn load_mdf4_path(&self, path: &str, startup: bool) {
-        if !std::path::Path::new(path).is_file() {
+        if !Path::new(path).is_file() {
             if startup {
                 log::warn!("Startup MDF4 path not found: {path}");
             } else {
-                self.with_ui(|ui| set_status(ui, &format!("File not found: {path}")));
+                self.with_ui(|ui| {
+                    ui.set_mdf4_frame_count(format!("File not found: {path}").into());
+                });
             }
             return;
         }
@@ -120,46 +170,88 @@ impl Mdf4Controller {
                 self.apply_filters();
                 self.with_ui(|ui| {
                     ui.set_mdf4_path(path.into());
-                    let count = self.all_frames.lock().len();
-                    set_status(ui, &format!("Loaded {count} frames"));
+                    let name = Path::new(path)
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or(path);
+                    ui.set_mdf4_file_name(name.to_string().into());
                 });
             }
             Err(e) => {
                 if startup {
                     log::warn!("Startup MDF4 load failed ({path}): {e}");
-                    self.with_ui(|ui| set_status(ui, "Ready"));
                 } else {
-                    self.with_ui(|ui| set_status(ui, &e));
+                    self.with_ui(|ui| {
+                        ui.set_mdf4_frame_count(format!("Load failed: {e}").into());
+                    });
                 }
             }
         }
     }
 
+    /// Header DBC button: fetch latest Sigma Racer DBC from updates and cache it.
+    /// Falls back to a local file picker if updates is unreachable.
     fn open_dbc(&self) {
-        if let Some(path) = pick_open_file("Open DBC", &[("DBC", &["dbc"])]) {
-            match load_dbc(&path, &self.state) {
-                Ok(msg) => {
-                    self.refresh_dbc_status();
-                    self.apply_filters();
-                    self.with_ui(|ui| set_status(ui, &msg));
+        match self.load_latest_dbc_from_updates() {
+            Ok(()) => {}
+            Err(updates_err) => {
+                log::warn!("Updates DBC unavailable ({updates_err}); falling back to file picker");
+                if let Some(path) = pick_open_file("Open DBC", &[("DBC", &["dbc"])]) {
+                    match self.cache_and_load_local_dbc(Path::new(&path)) {
+                        Ok(()) => {}
+                        Err(e) => self.with_ui(|ui| {
+                            ui.set_mdf4_frame_count(format!("DBC load failed: {e}").into());
+                        }),
+                    }
+                } else {
+                    self.with_ui(|ui| {
+                        ui.set_mdf4_frame_count(format!("DBC unavailable: {updates_err}").into());
+                    });
                 }
-                Err(e) => self.with_ui(|ui| set_status(ui, &e)),
             }
         }
+    }
+
+    fn load_latest_dbc_from_updates(&self) -> Result<(), String> {
+        let cfg = UpdatesConfig::from_env();
+        let (filename, content) = fetch_latest_dbc_content(&cfg)?;
+        let cache_path = SessionConfig::cache_dbc_bytes(&filename, &content)?;
+        let path = cache_path.to_string_lossy().into_owned();
+        save_dbc_content(&path, &content, &self.state)?;
+        self.refresh_dbc_status();
+        self.apply_filters();
+        self.notify_dbc_editor();
+        Ok(())
+    }
+
+    fn cache_and_load_local_dbc(&self, src: &Path) -> Result<(), String> {
+        let cache_dir =
+            SessionConfig::dbc_cache_dir().ok_or("Could not determine DBC cache directory")?;
+        let dest = SessionConfig::cache_file(src, &cache_dir)?;
+        let path = dest.to_string_lossy().into_owned();
+        load_dbc(&path, &self.state)?;
+        self.refresh_dbc_status();
+        self.apply_filters();
+        self.notify_dbc_editor();
+        Ok(())
     }
 
     fn export_mdf4(&self) {
         let frames = self.filtered_frames.lock().clone();
         if frames.is_empty() {
-            self.with_ui(|ui| set_status(ui, "No frames to export"));
+            self.with_ui(|ui| {
+                ui.set_mdf4_frame_count("No frames to export".into());
+            });
             return;
         }
         if let Some(path) = pick_save_file("Export MDF4", &[("MDF4", &["mf4"])]) {
             match export_logs(&path, &frames) {
                 Ok(count) => self.with_ui(|ui| {
-                    set_status(ui, &format!("Exported {count} frames to {path}"));
+                    ui.set_mdf4_frame_count(format!("Exported {count} frames").into());
                 }),
-                Err(e) => self.with_ui(|ui| set_status(ui, &e)),
+                Err(e) => self.with_ui(|ui| {
+                    ui.set_mdf4_frame_count(e.into());
+                }),
             }
         }
     }
@@ -188,7 +280,11 @@ impl Mdf4Controller {
             *self.filtered_frames.lock() = result.frames.clone();
             self.update_frame_table(&result.frames);
             ui.set_mdf4_frame_count(
-                format!("{} / {} frames", result.filtered_count, result.total_count).into(),
+                format!(
+                    "Loaded {} / {} frames",
+                    result.filtered_count, result.total_count
+                )
+                .into(),
             );
             ui.set_mdf4_selected_frame(-1);
             ui.set_mdf4_signals(ModelRc::new(slint::VecModel::default()));

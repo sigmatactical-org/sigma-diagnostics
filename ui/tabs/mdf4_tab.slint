@@ -1,10 +1,8 @@
 import { ListView, LineEdit } from "std-widgets.slint";
 import { SigmaTheme } from "../theme.slint";
-import { FrameRow, SignalRow, ToolbarButton, StatusChip } from "../widgets/common.slint";
+import { FrameRow, SignalRow, ToolbarButton } from "../widgets/common.slint";
 
 export component Mdf4Tab inherits Rectangle {
-    callback open-mdf4();
-    callback open-dbc();
     callback open-catalog();
     callback export-mdf4();
     callback apply-filters();
@@ -12,8 +10,7 @@ export component Mdf4Tab inherits Rectangle {
     callback frame-selected(int);
 
     in-out property <string> mdf4-path: "";
-    in-out property <string> dbc-status: "No DBC";
-    in-out property <string> frame-count: "0 frames";
+    in-out property <string> frame-count: "Loaded 0 / 0 frames";
     in-out property <[FrameRow]> frames;
     in-out property <[SignalRow]> signals;
     in-out property <string> filter-can-id: "";
@@ -29,12 +26,8 @@ export component Mdf4Tab inherits Rectangle {
 
         HorizontalLayout {
             spacing: 8px;
-            ToolbarButton { label: "Open MDF4"; clicked => { root.open-mdf4(); } }
-            ToolbarButton { label: "Open DBC"; clicked => { root.open-dbc(); } }
             ToolbarButton { label: "Catalog"; clicked => { root.open-catalog(); } }
             ToolbarButton { label: "Export"; clicked => { root.export-mdf4(); } }
-            StatusChip { label: "DBC"; value: root.dbc-status; }
-            StatusChip { label: "File"; value: root.mdf4-path == "" ? "—" : root.mdf4-path; }
             Rectangle { horizontal-stretch: 1; }
             Text { text: root.frame-count; color: SigmaTheme.text-dim; vertical-alignment: center; }
         }
@@ -147,7 +140,10 @@ export component Mdf4Tab inherits Rectangle {
                     border-color: SigmaTheme.border;
                     VerticalLayout {
                         padding: 4px;
-                        Text { text: "Signals"; color: SigmaTheme.text; font-weight: 600; padding: 4px; }
+                        HorizontalLayout {
+                            padding: 4px;
+                            Text { text: "Signals"; color: SigmaTheme.text; font-weight: 600; }
+                        }
                         ListView {
                             for sig in root.signals: Rectangle {
                                 height: SigmaTheme.row-height;

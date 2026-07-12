@@ -5,7 +5,7 @@ import { LiveTab } from "tabs/live_tab.slint";
 import { DbcTab } from "tabs/dbc_tab.slint";
 import { AboutTab } from "tabs/about_tab.slint";
 import { DbcCatalogDialog } from "widgets/dbc_catalog.slint";
-import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow, DepRow, DbcCatalogRow } from "widgets/common.slint";
+import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow, DepRow, DbcCatalogRow, FileLoadButton } from "widgets/common.slint";
 
 export component SigmaCanViewer inherits Window {
     title: "CAN Viewer";
@@ -26,8 +26,10 @@ export component SigmaCanViewer inherits Window {
     callback clear-filters();
     callback frame-selected(int);
     in-out property <string> mdf4-path: "";
+    in-out property <string> mdf4-file-name: "";
     in-out property <string> mdf4-dbc-status: "No DBC";
-    in-out property <string> mdf4-frame-count: "0 frames";
+    in-out property <string> mdf4-dbc-file-name: "";
+    in-out property <string> mdf4-frame-count: "Loaded 0 / 0 frames";
     in-out property <[FrameRow]> mdf4-frames;
     in-out property <[SignalRow]> mdf4-signals;
     in-out property <string> mdf4-filter-can-id: "";
@@ -52,9 +54,8 @@ export component SigmaCanViewer inherits Window {
     in-out property <[LiveErrorRow]> live-errors;
     in-out property <int> live-view: 0;
 
-    // DBC tab state
+    // DBC tab state — edits the master DBC owned by the header DBC button
     callback new-dbc();
-    callback dbc-open();
     callback save-dbc();
     callback save-dbc-as();
     callback add-message();
@@ -117,58 +118,87 @@ export component SigmaCanViewer inherits Window {
         height: 100%;
 
         VerticalLayout {
-            padding-top: 8px;
-            padding-left: 8px;
-            padding-right: 8px;
-            padding-bottom: 8px;
+            padding: 8px;
             spacing: 8px;
 
-        Rectangle {
-            background: SigmaTheme.surface-raised;
-            border-radius: 4px;
-            HorizontalLayout {
-                padding-top: 8px;
-                padding-bottom: 8px;
-                padding-left: 12px;
-                padding-right: 12px;
-                spacing: 16px;
-                AppTitle {}
-                Rectangle { width: 1px; height: 24px; background: SigmaTheme.border; }
+            // App header: brand | tabs | master file buttons
+            Rectangle {
+                height: 56px;
+                background: SigmaTheme.surface-raised;
+                border-radius: 4px;
+
                 HorizontalLayout {
-                    spacing: 4px;
-                    for tab-label[i] in ["MDF4", "Live", "DBC", "About"]: Rectangle {
+                    padding-left: 12px;
+                    padding-right: 12px;
+                    spacing: 12px;
+                    alignment: center;
+
+                    AppTitle {}
+
+                    Rectangle {
+                        width: 1px;
                         height: 28px;
-                        min-width: 64px;
-                        background: root.active-tab == i ? SigmaTheme.accent.transparentize(0.8) : (touch.has-hover ? SigmaTheme.surface : transparent);
-                        border-radius: 4px;
-                        touch := TouchArea { clicked => { root.active-tab = i; } }
-                        Text {
-                            text: tab-label;
-                            color: root.active-tab == i ? SigmaTheme.accent : SigmaTheme.text-dim;
-                            horizontal-alignment: center;
-                            vertical-alignment: center;
+                        background: SigmaTheme.border;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 4px;
+                        alignment: center;
+                        for tab-label[i] in ["MDF4", "Live", "DBC", "About"]: Rectangle {
+                            height: 32px;
+                            min-width: 72px;
+                            background: root.active-tab == i
+                                ? SigmaTheme.accent.transparentize(0.8)
+                                : (touch.has-hover ? SigmaTheme.surface : transparent);
+                            border-radius: 4px;
+                            touch := TouchArea {
+                                width: 100%;
+                                height: 100%;
+                                clicked => { root.active-tab = i; }
+                            }
+                            HorizontalLayout {
+                                padding-left: 14px;
+                                padding-right: 14px;
+                                alignment: center;
+                                Text {
+                                    text: tab-label;
+                                    color: root.active-tab == i ? SigmaTheme.accent : SigmaTheme.text-dim;
+                                    vertical-alignment: center;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle { horizontal-stretch: 1; }
+
+                    HorizontalLayout {
+                        spacing: 8px;
+                        alignment: center;
+                        FileLoadButton {
+                            label: "MDF4";
+                            filename: root.mdf4-file-name;
+                            loaded: root.mdf4-path != "";
+                            clicked => { root.open-mdf4(); }
+                        }
+                        FileLoadButton {
+                            label: "DBC";
+                            filename: root.mdf4-dbc-file-name;
+                            loaded: root.mdf4-dbc-status != "No DBC";
+                            clicked => { root.mdf4-open-dbc(); }
                         }
                     }
                 }
-                Rectangle { horizontal-stretch: 1; }
-                Text {
-                    text: root.status-text;
-                    color: SigmaTheme.text-dim;
-                    font-size: SigmaTheme.font-size-small;
-                    vertical-alignment: center;
-                }
             }
-        }
 
-        Rectangle {
-            vertical-stretch: 1;
-            clip: true;
+            Rectangle {
+                vertical-stretch: 1;
+                clip: true;
 
             if root.active-tab == 0: Mdf4Tab {
                 width: 100%;
                 height: 100%;
                 mdf4-path <=> root.mdf4-path;
-                dbc-status <=> root.mdf4-dbc-status;
                 frame-count <=> root.mdf4-frame-count;
                 frames <=> root.mdf4-frames;
                 signals <=> root.mdf4-signals;
@@ -176,8 +206,6 @@ export component SigmaCanViewer inherits Window {
                 filter-message <=> root.mdf4-filter-message;
                 filter-data <=> root.mdf4-filter-data;
                 selected-frame-index <=> root.mdf4-selected-frame;
-                open-mdf4 => { root.open-mdf4(); }
-                open-dbc => { root.mdf4-open-dbc(); }
                 open-catalog => { root.open-dbc-catalog(); }
                 export-mdf4 => { root.export-mdf4(); }
                 apply-filters => { root.apply-filters(); }
@@ -234,8 +262,7 @@ export component SigmaCanViewer inherits Window {
                 edit-node-comment <=> root.dbc-edit-node-comment;
                 editor-panel <=> root.dbc-editor-panel;
                 new-dbc => { root.new-dbc(); }
-                open-dbc => { root.dbc-open(); }
-                open-catalog => { root.open-dbc-catalog(); }
+                open-dbc => { root.mdf4-open-dbc(); }
                 save-dbc => { root.save-dbc(); }
                 save-dbc-as => { root.save-dbc-as(); }
                 add-message => { root.add-message(); }

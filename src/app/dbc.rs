@@ -1,9 +1,10 @@
 //! DBC editor tab controller.
 
-use super::helpers::{parse_hex_id, pick_open_file, pick_save_file, set_status, vec_model};
+use super::helpers::{parse_hex_id, pick_save_file, set_status, vec_model};
+use super::mdf4::Mdf4Controller;
 use crate::dbc_export::empty_dbc_info;
 use crate::dto::{DbcInfo, MessageInfo, NodeInfo, SignalInfo};
-use crate::services::{get_dbc_info, get_dbc_path, load_dbc, save_dbc_info};
+use crate::services::{get_dbc_info, get_dbc_path, save_dbc_info};
 use crate::state::AppState;
 use crate::{
     DbcAttributeRow as UiDbcAttributeRow, DbcMessageRow as UiDbcMessageRow,
@@ -12,11 +13,13 @@ use crate::{
 };
 use parking_lot::Mutex;
 use slint::Weak;
-use std::sync::Arc;
+use std::sync::{Arc, Weak as StdWeak};
 
 pub struct DbcController {
     state: Arc<AppState>,
     ui: Weak<SigmaCanViewer>,
+    /// Header MDF4/DBC buttons own file loading; this tab edits that master DBC.
+    file_master: Mutex<StdWeak<Mdf4Controller>>,
     edit_state: Mutex<DbcInfo>,
     path: Mutex<Option<String>>,
     dirty: Mutex<bool>,
@@ -30,6 +33,7 @@ impl DbcController {
         Self {
             state,
             ui,
+            file_master: Mutex::new(StdWeak::new()),
             edit_state: Mutex::new(empty_dbc_info()),
             path: Mutex::new(None),
             dirty: Mutex::new(false),
@@ -37,6 +41,10 @@ impl DbcController {
             selected_signal: Mutex::new(-1),
             selected_node: Mutex::new(-1),
         }
+    }
+
+    pub fn set_file_master(&self, mdf4: StdWeak<Mdf4Controller>) {
+        *self.file_master.lock() = mdf4;
     }
 
     pub fn wire(self: Arc<Self>, ui: &SigmaCanViewer) {
@@ -50,10 +58,6 @@ impl DbcController {
         ui.on_new_dbc({
             let t = this.clone();
             move || t.new_dbc()
-        });
-        ui.on_dbc_open({
-            let t = this.clone();
-            move || t.open_dbc()
         });
         ui.on_save_dbc({
             let t = this.clone();
@@ -126,13 +130,37 @@ impl DbcController {
     }
 
     fn refresh_ui(&self) {
-        let info = self.edit_state.lock();
-        let path = self.path.lock().clone();
-        let dirty = *self.dirty.lock();
+        // Clone everything first — never hold edit_state across Slint property updates
+        // (those can re-enter selection callbacks and deadlock on the same mutex).
+        let (display_path, dirty, selected_message, selected_signal, selected_node, info) = {
+            let info = self.edit_state.lock().clone();
+            let path = self.path.lock().clone();
+            let dirty = *self.dirty.lock();
+            let selected_message = *self.selected_message.lock();
+            let selected_signal = *self.selected_signal.lock();
+            let selected_node = *self.selected_node.lock();
+            let display_path = path
+                .as_ref()
+                .map(|p| {
+                    std::path::Path::new(p)
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or(p)
+                        .to_string()
+                })
+                .unwrap_or_default();
+            (
+                display_path,
+                dirty,
+                selected_message,
+                selected_signal,
+                selected_node,
+                info,
+            )
+        };
 
         let messages: Vec<UiDbcMessageRow> = info.messages.iter().map(message_row).collect();
-        let signals: Vec<UiDbcSignalRow> =
-            selected_message_signals(&info, *self.selected_message.lock());
+        let signals: Vec<UiDbcSignalRow> = selected_message_signals(&info, selected_message);
         let nodes: Vec<UiDbcNodeRow> = info.nodes.iter().map(node_row).collect();
         let attributes: Vec<UiDbcAttributeRow> = info
             .attribute_definitions
@@ -160,7 +188,7 @@ impl DbcController {
             .collect();
 
         self.with_ui(|ui| {
-            ui.set_dbc_path(path.unwrap_or_default().into());
+            ui.set_dbc_path(display_path.into());
             ui.set_dbc_dirty(dirty);
             ui.set_dbc_version(info.version.clone().unwrap_or_default().into());
             ui.set_dbc_comment(info.comment.clone().unwrap_or_default().into());
@@ -169,32 +197,61 @@ impl DbcController {
             ui.set_dbc_nodes(vec_model(&nodes));
             ui.set_dbc_attributes(vec_model(&attributes));
             ui.set_dbc_value_descriptions(vec_model(&value_descriptions));
-            ui.set_dbc_selected_message(*self.selected_message.lock());
-            ui.set_dbc_selected_signal(*self.selected_signal.lock());
-            ui.set_dbc_selected_node(*self.selected_node.lock());
+            ui.set_dbc_selected_message(selected_message);
+            ui.set_dbc_selected_signal(selected_signal);
+            ui.set_dbc_selected_node(selected_node);
         });
     }
 
     fn apply_edits_from_ui(&self) {
-        let mut info = self.edit_state.lock();
-        self.with_ui(|ui| {
-            info.version = Some(ui.get_dbc_version().to_string());
-            info.comment = Some(ui.get_dbc_comment().to_string());
+        let Some(ui) = self.ui.upgrade() else {
+            return;
+        };
+        let panel = ui.get_dbc_editor_panel();
+        let version = ui.get_dbc_version().to_string();
+        let comment = ui.get_dbc_comment().to_string();
+        let msg_idx = *self.selected_message.lock();
+        let sig_idx = *self.selected_signal.lock();
+        let node_idx = *self.selected_node.lock();
 
-            let panel = ui.get_dbc_editor_panel();
+        let msg_id = ui.get_dbc_edit_message_id().to_string();
+        let msg_name = ui.get_dbc_edit_message_name().to_string();
+        let msg_dlc = ui.get_dbc_edit_message_dlc().to_string();
+        let msg_sender = ui.get_dbc_edit_message_sender().to_string();
+
+        let sig_name = ui.get_dbc_edit_signal_name().to_string();
+        let sig_start = ui.get_dbc_edit_signal_start().to_string();
+        let sig_length = ui.get_dbc_edit_signal_length().to_string();
+        let sig_factor = ui.get_dbc_edit_signal_factor().to_string();
+        let sig_offset = ui.get_dbc_edit_signal_offset().to_string();
+        let sig_unit = ui.get_dbc_edit_signal_unit().to_string();
+
+        let node_name = ui.get_dbc_edit_node_name().to_string();
+        let node_comment = ui.get_dbc_edit_node_comment().to_string();
+
+        {
+            let mut info = self.edit_state.lock();
+            info.version = Some(version);
+            info.comment = Some(comment);
+
             if panel == 0 {
-                apply_message_edits(&mut info, ui, *self.selected_message.lock());
+                apply_message_edits_values(&mut info, msg_idx, &msg_id, &msg_name, &msg_dlc, &msg_sender);
             } else if panel == 1 {
-                apply_signal_edits(
+                apply_signal_edits_values(
                     &mut info,
-                    ui,
-                    *self.selected_message.lock(),
-                    *self.selected_signal.lock(),
+                    msg_idx,
+                    sig_idx,
+                    &sig_name,
+                    &sig_start,
+                    &sig_length,
+                    &sig_factor,
+                    &sig_offset,
+                    &sig_unit,
                 );
             } else if panel == 2 {
-                apply_node_edits(&mut info, ui, *self.selected_node.lock());
+                apply_node_edits_values(&mut info, node_idx, &node_name, &node_comment);
             }
-        });
+        }
         self.mark_dirty();
     }
 
@@ -207,23 +264,15 @@ impl DbcController {
         *self.selected_node.lock() = -1;
         let _ = crate::services::clear_dbc(&self.state);
         self.refresh_ui();
+        self.sync_master_header();
         self.with_ui(|ui| set_status(ui, "New DBC created"));
     }
 
-    fn open_dbc(&self) {
-        if let Some(path) = pick_open_file("Open DBC", &[("DBC", &["dbc"])]) {
-            match load_dbc(&path, &self.state) {
-                Ok(msg) => {
-                    if let Ok(Some(info)) = get_dbc_info(&self.state) {
-                        *self.edit_state.lock() = info;
-                    }
-                    *self.path.lock() = Some(path);
-                    *self.dirty.lock() = false;
-                    self.refresh_ui();
-                    self.with_ui(|ui| set_status(ui, &msg));
-                }
-                Err(e) => self.with_ui(|ui| set_status(ui, &e)),
-            }
+    /// Load/reload is owned by the header DBC master button (`mdf4-open-dbc`).
+
+    fn sync_master_header(&self) {
+        if let Some(master) = self.file_master.lock().upgrade() {
+            master.sync_dbc_header_from_state();
         }
     }
 
@@ -249,6 +298,7 @@ impl DbcController {
                 *self.path.lock() = Some(path.to_string());
                 *self.dirty.lock() = false;
                 self.refresh_ui();
+                self.sync_master_header();
                 self.with_ui(|ui| set_status(ui, &format!("Saved {path}")));
             }
             Err(e) => self.with_ui(|ui| set_status(ui, &e)),
@@ -257,23 +307,25 @@ impl DbcController {
 
     fn add_message(&self) {
         self.apply_edits_from_ui();
-        let mut info = self.edit_state.lock();
-        let id = next_message_id(&info);
-        info.messages.push(MessageInfo {
-            id,
-            is_extended: false,
-            name: format!("Message_{id}"),
-            dlc: 8,
-            sender: "Vector__XXX".to_string(),
-            signals: Vec::new(),
-            comment: None,
-        });
-        drop(info);
-        *self.selected_message.lock() = (self.edit_state.lock().messages.len() as i32) - 1;
+        let new_index = {
+            let mut info = self.edit_state.lock();
+            let id = next_message_id(&info);
+            info.messages.push(MessageInfo {
+                id,
+                is_extended: false,
+                name: format!("Message_{id}"),
+                dlc: 8,
+                sender: "Vector__XXX".to_string(),
+                signals: Vec::new(),
+                comment: None,
+            });
+            (info.messages.len() as i32) - 1
+        };
+        *self.selected_message.lock() = new_index;
         *self.selected_signal.lock() = -1;
         self.mark_dirty();
         self.refresh_ui();
-        self.select_message(*self.selected_message.lock());
+        self.show_message(new_index);
     }
 
     fn delete_message(&self) {
@@ -282,10 +334,12 @@ impl DbcController {
             return;
         }
         self.apply_edits_from_ui();
-        let mut info = self.edit_state.lock();
-        if let Ok(i) = usize::try_from(idx) {
-            if i < info.messages.len() {
-                info.messages.remove(i);
+        {
+            let mut info = self.edit_state.lock();
+            if let Ok(i) = usize::try_from(idx) {
+                if i < info.messages.len() {
+                    info.messages.remove(i);
+                }
             }
         }
         *self.selected_message.lock() = -1;
@@ -301,8 +355,11 @@ impl DbcController {
             return;
         }
         self.apply_edits_from_ui();
-        let mut info = self.edit_state.lock();
-        if let Some(msg) = info.messages.get_mut(msg_idx as usize) {
+        let new_sig = {
+            let mut info = self.edit_state.lock();
+            let Some(msg) = info.messages.get_mut(msg_idx as usize) else {
+                return;
+            };
             msg.signals.push(SignalInfo {
                 name: format!("Signal_{}", msg.signals.len()),
                 start_bit: 0,
@@ -319,12 +376,12 @@ impl DbcController {
                 multiplexer_value: None,
                 comment: None,
             });
-            *self.selected_signal.lock() = (msg.signals.len() as i32) - 1;
-        }
-        drop(info);
+            (msg.signals.len() as i32) - 1
+        };
+        *self.selected_signal.lock() = new_sig;
         self.mark_dirty();
         self.refresh_ui();
-        self.select_signal(*self.selected_signal.lock());
+        self.show_signal(new_sig);
     }
 
     fn delete_signal(&self) {
@@ -334,11 +391,13 @@ impl DbcController {
             return;
         }
         self.apply_edits_from_ui();
-        let mut info = self.edit_state.lock();
-        if let Some(msg) = info.messages.get_mut(msg_idx as usize) {
-            if let Ok(i) = usize::try_from(sig_idx) {
-                if i < msg.signals.len() {
-                    msg.signals.remove(i);
+        {
+            let mut info = self.edit_state.lock();
+            if let Some(msg) = info.messages.get_mut(msg_idx as usize) {
+                if let Ok(i) = usize::try_from(sig_idx) {
+                    if i < msg.signals.len() {
+                        msg.signals.remove(i);
+                    }
                 }
             }
         }
@@ -349,17 +408,19 @@ impl DbcController {
 
     fn add_node(&self) {
         self.apply_edits_from_ui();
-        let mut info = self.edit_state.lock();
-        let name = format!("Node_{}", info.nodes.len());
-        info.nodes.push(NodeInfo {
-            name,
-            comment: None,
-        });
-        *self.selected_node.lock() = (info.nodes.len() as i32) - 1;
-        drop(info);
+        let new_index = {
+            let mut info = self.edit_state.lock();
+            let name = format!("Node_{}", info.nodes.len());
+            info.nodes.push(NodeInfo {
+                name,
+                comment: None,
+            });
+            (info.nodes.len() as i32) - 1
+        };
+        *self.selected_node.lock() = new_index;
         self.mark_dirty();
         self.refresh_ui();
-        self.select_node(*self.selected_node.lock());
+        self.show_node(new_index);
     }
 
     fn delete_node(&self) {
@@ -368,10 +429,12 @@ impl DbcController {
             return;
         }
         self.apply_edits_from_ui();
-        let mut info = self.edit_state.lock();
-        if let Ok(i) = usize::try_from(idx) {
-            if i < info.nodes.len() {
-                info.nodes.remove(i);
+        {
+            let mut info = self.edit_state.lock();
+            if let Ok(i) = usize::try_from(idx) {
+                if i < info.nodes.len() {
+                    info.nodes.remove(i);
+                }
             }
         }
         *self.selected_node.lock() = -1;
@@ -383,7 +446,24 @@ impl DbcController {
         self.apply_edits_from_ui();
         *self.selected_message.lock() = index;
         *self.selected_signal.lock() = -1;
-        let info = self.edit_state.lock();
+        self.show_message(index);
+    }
+
+    fn select_signal(&self, index: i32) {
+        self.apply_edits_from_ui();
+        *self.selected_signal.lock() = index;
+        self.show_signal(index);
+    }
+
+    fn select_node(&self, index: i32) {
+        self.apply_edits_from_ui();
+        *self.selected_node.lock() = index;
+        self.show_node(index);
+    }
+
+    fn show_message(&self, index: i32) {
+        let info = self.edit_state.lock().clone();
+        let signals = selected_message_signals(&info, index);
         self.with_ui(|ui| {
             ui.set_dbc_selected_message(index);
             ui.set_dbc_selected_signal(-1);
@@ -393,16 +473,13 @@ impl DbcController {
                 ui.set_dbc_edit_message_dlc(msg.dlc.to_string().into());
                 ui.set_dbc_edit_message_sender(msg.sender.clone().into());
             }
-            let signals: Vec<UiDbcSignalRow> = selected_message_signals(&info, index);
             ui.set_dbc_signals(vec_model(&signals));
         });
     }
 
-    fn select_signal(&self, index: i32) {
-        self.apply_edits_from_ui();
-        *self.selected_signal.lock() = index;
+    fn show_signal(&self, index: i32) {
         let msg_idx = *self.selected_message.lock();
-        let info = self.edit_state.lock();
+        let info = self.edit_state.lock().clone();
         self.with_ui(|ui| {
             ui.set_dbc_selected_signal(index);
             if let Some(msg) = info.messages.get(msg_idx as usize) {
@@ -418,10 +495,8 @@ impl DbcController {
         });
     }
 
-    fn select_node(&self, index: i32) {
-        self.apply_edits_from_ui();
-        *self.selected_node.lock() = index;
-        let info = self.edit_state.lock();
+    fn show_node(&self, index: i32) {
+        let info = self.edit_state.lock().clone();
         self.with_ui(|ui| {
             ui.set_dbc_selected_node(index);
             if let Some(node) = info.nodes.get(index as usize) {
@@ -471,33 +546,50 @@ fn next_message_id(info: &DbcInfo) -> u32 {
     info.messages.iter().map(|m| m.id).max().unwrap_or(255) + 1
 }
 
-fn apply_message_edits(info: &mut DbcInfo, ui: &SigmaCanViewer, idx: i32) {
+fn apply_message_edits_values(
+    info: &mut DbcInfo,
+    idx: i32,
+    id_text: &str,
+    name: &str,
+    dlc: &str,
+    sender: &str,
+) {
     if idx < 0 {
         return;
     }
     if let Some(msg) = info.messages.get_mut(idx as usize) {
-        if let Some(id) = parse_hex_id(ui.get_dbc_edit_message_id().as_ref()) {
+        if let Some(id) = parse_hex_id(id_text) {
             msg.id = id;
             msg.is_extended = id > 0x7FF;
         }
-        msg.name = ui.get_dbc_edit_message_name().to_string();
-        msg.dlc = ui.get_dbc_edit_message_dlc().parse().unwrap_or(8);
-        msg.sender = ui.get_dbc_edit_message_sender().to_string();
+        msg.name = name.to_string();
+        msg.dlc = dlc.parse().unwrap_or(8);
+        msg.sender = sender.to_string();
     }
 }
 
-fn apply_signal_edits(info: &mut DbcInfo, ui: &SigmaCanViewer, msg_idx: i32, sig_idx: i32) {
+fn apply_signal_edits_values(
+    info: &mut DbcInfo,
+    msg_idx: i32,
+    sig_idx: i32,
+    name: &str,
+    start: &str,
+    length: &str,
+    factor: &str,
+    offset: &str,
+    unit: &str,
+) {
     if msg_idx < 0 || sig_idx < 0 {
         return;
     }
     if let Some(msg) = info.messages.get_mut(msg_idx as usize) {
         if let Some(sig) = msg.signals.get_mut(sig_idx as usize) {
-            sig.name = ui.get_dbc_edit_signal_name().to_string();
-            sig.start_bit = ui.get_dbc_edit_signal_start().parse().unwrap_or(0);
-            sig.length = ui.get_dbc_edit_signal_length().parse().unwrap_or(8);
-            sig.factor = ui.get_dbc_edit_signal_factor().parse().unwrap_or(1.0);
-            sig.offset = ui.get_dbc_edit_signal_offset().parse().unwrap_or(0.0);
-            sig.unit = ui.get_dbc_edit_signal_unit().to_string();
+            sig.name = name.to_string();
+            sig.start_bit = start.parse().unwrap_or(0);
+            sig.length = length.parse().unwrap_or(8);
+            sig.factor = factor.parse().unwrap_or(1.0);
+            sig.offset = offset.parse().unwrap_or(0.0);
+            sig.unit = unit.to_string();
         }
     }
 }
@@ -512,17 +604,16 @@ fn attribute_value_summary(value_type: &crate::dto::AttributeValueType) -> Strin
     }
 }
 
-fn apply_node_edits(info: &mut DbcInfo, ui: &SigmaCanViewer, idx: i32) {
+fn apply_node_edits_values(info: &mut DbcInfo, idx: i32, name: &str, comment: &str) {
     if idx < 0 {
         return;
     }
     if let Some(node) = info.nodes.get_mut(idx as usize) {
-        node.name = ui.get_dbc_edit_node_name().to_string();
-        let comment = ui.get_dbc_edit_node_comment().to_string();
+        node.name = name.to_string();
         node.comment = if comment.is_empty() {
             None
         } else {
-            Some(comment)
+            Some(comment.to_string())
         };
     }
 }

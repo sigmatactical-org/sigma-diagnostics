@@ -22,6 +22,8 @@ pub fn run(state: Arc<AppState>) -> Result<(), slint::PlatformError> {
     let mdf4 = Arc::new(mdf4::Mdf4Controller::new(state.clone(), ui.as_weak()));
     let live = Rc::new(live::LiveController::new(state.clone(), ui.as_weak()));
     let dbc = Arc::new(dbc::DbcController::new(state.clone(), ui.as_weak()));
+    mdf4.set_dbc_editor(Arc::downgrade(&dbc));
+    dbc.set_file_master(Arc::downgrade(&mdf4));
     let catalog = Arc::new(catalog::CatalogController::new(
         state.clone(),
         ui.as_weak(),
