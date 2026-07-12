@@ -1,12 +1,12 @@
-# CAN Viewer — Architecture
+# Diagnostics — Architecture
 
 ## Overview
 
-CAN Viewer is a native Slint desktop application. Domain logic lives in Rust; the UI binds to Rust-owned models via Slint properties and callbacks. There is no WebView, JavaScript frontend, or Tauri IPC layer.
+Diagnostics is a native Slint desktop application. Domain logic lives in Rust; the UI binds to Rust-owned models via Slint properties and callbacks. There is no WebView, JavaScript frontend, or Tauri IPC layer.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    SigmaCanViewer (Slint)                     │
+│                    SigmaDiagnostics (Slint)                     │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────┐  │
 │  │  MDF4 tab  │  │  Live tab  │  │  DBC tab   │  │ About  │  │
 │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └────────┘  │
@@ -34,10 +34,10 @@ CAN Viewer is a native Slint desktop application. Domain logic lives in Rust; th
 ## Directory structure
 
 ```
-can-viewer/
+diagnostics/
 ├── build.rs                 # slint_build::compile("ui/app.slint")
 ├── ui/
-│   ├── app.slint            # SigmaCanViewer root window
+│   ├── app.slint            # SigmaDiagnostics root window
 │   ├── theme.slint          # Brand palette
 │   ├── tabs/                # MDF4, Live, DBC tab components
 │   └── widgets/             # Shared rows, toolbar, status chip
@@ -92,7 +92,7 @@ can-viewer/
 
 ## Session persistence
 
-Configuration is stored under `~/.config/can-viewer` (unchanged from prior releases) via `config::SessionConfig`.
+Configuration is stored under `~/.config/diagnostics` via `config::SessionConfig`.
 
 ## Extension point
 

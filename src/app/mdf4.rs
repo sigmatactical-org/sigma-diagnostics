@@ -10,7 +10,7 @@ use crate::services::{
     load_dbc, load_mdf4, save_dbc_content, FilterConfig, MatchStatus, UpdatesConfig,
 };
 use crate::state::AppState;
-use crate::{FrameRow, SigmaCanViewer, SignalRow};
+use crate::{FrameRow, SigmaDiagnostics, SignalRow};
 use parking_lot::Mutex;
 use slint::{ModelRc, Weak};
 use std::path::Path;
@@ -20,14 +20,14 @@ use super::dbc::DbcController;
 
 pub struct Mdf4Controller {
     state: Arc<AppState>,
-    ui: Weak<SigmaCanViewer>,
+    ui: Weak<SigmaDiagnostics>,
     dbc_editor: Mutex<StdWeak<DbcController>>,
     all_frames: Mutex<Vec<CanFrameDto>>,
     filtered_frames: Mutex<Vec<CanFrameDto>>,
 }
 
 impl Mdf4Controller {
-    pub fn new(state: Arc<AppState>, ui: Weak<SigmaCanViewer>) -> Self {
+    pub fn new(state: Arc<AppState>, ui: Weak<SigmaDiagnostics>) -> Self {
         Self {
             state,
             ui,
@@ -42,7 +42,7 @@ impl Mdf4Controller {
         *self.dbc_editor.lock() = dbc;
     }
 
-    pub fn wire(self: Arc<Self>, ui: &SigmaCanViewer) {
+    pub fn wire(self: Arc<Self>, ui: &SigmaDiagnostics) {
         ui.on_open_mdf4({
             let this = self.clone();
             move || this.open_mdf4()
@@ -112,7 +112,7 @@ impl Mdf4Controller {
         }
     }
 
-    fn with_ui<F: FnOnce(&SigmaCanViewer)>(&self, f: F) {
+    fn with_ui<F: FnOnce(&SigmaDiagnostics)>(&self, f: F) {
         if let Some(ui) = self.ui.upgrade() {
             f(&ui);
         }

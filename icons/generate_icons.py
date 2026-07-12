@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate CAN Viewer icons - grayscale with network diagram."""
+"""Generate Diagnostics icons - grayscale with network diagram."""
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -79,7 +79,7 @@ def create_icon(size):
 
 def main():
     for filename, size in SIZES.items():
-        create_icon(size).save(f'/home/rene/Source/Workspace/can-viewer/src-tauri/icons/{filename}')
+        create_icon(size).save(f'icons/{filename}')
         print(f"Generated {filename}")
     print("Done!")
 

@@ -1,4 +1,4 @@
-# CAN Viewer
+# Diagnostics
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="ui/assets/sigma-mark.svg">
@@ -7,8 +7,8 @@
 
 Native desktop application for viewing and analyzing CAN bus data from MDF4 files and live SocketCAN interfaces.
 
-[![Crates.io](https://img.shields.io/crates/v/can-viewer.svg)](https://crates.io/crates/can-viewer)
-[![License](https://img.shields.io/crates/l/can-viewer.svg)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/diagnostics.svg)](https://crates.io/crates/diagnostics)
+[![License](https://img.shields.io/crates/l/diagnostics.svg)](LICENSE)
 
 Maintained by [Sigma Tactical Group](https://github.com/sigmatactical-org). See [CONTRIBUTORS.md](CONTRIBUTORS.md) for lineage.
 
@@ -24,15 +24,15 @@ Maintained by [Sigma Tactical Group](https://github.com/sigmatactical-org). See 
 ## Installation
 
 ```bash
-cargo install can-viewer
-can-viewer
+cargo install diagnostics
+diagnostics
 ```
 
 ## From source
 
 ```bash
-git clone https://github.com/sigmatactical-org/can-viewer.git
-cd can-viewer
+git clone https://github.com/sigmatactical-org/diagnostics.git
+cd diagnostics
 cargo run
 ```
 
@@ -50,7 +50,7 @@ sudo apt install -y libfontconfig1-dev libxkbcommon-dev libgl1-mesa-dev
 ## Command line options
 
 ```
-can-viewer [OPTIONS]
+diagnostics [OPTIONS]
 
 Options:
   -d, --dbc <PATH>    DBC file to load on startup
@@ -64,7 +64,7 @@ Options:
 | --- | --- |
 | `SIGMA_UPDATES_URL` | Base URL of sigma-updates (default `http://updates.sigma.localtest.me:30080`) |
 
-Downloaded schemas are cached under `~/.config/can-viewer/dbc-cache/`.
+Downloaded schemas are cached under `~/.config/diagnostics/dbc-cache/`.
 
 ## Brand & artwork
 

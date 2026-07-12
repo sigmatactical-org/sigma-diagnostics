@@ -8,14 +8,14 @@ use crate::services::{
     download_dbc, fetch_dbc_catalog, save_dbc_content, DbcCatalogFile, UpdatesConfig,
 };
 use crate::state::AppState;
-use crate::{DbcCatalogRow, SigmaCanViewer};
+use crate::{DbcCatalogRow, SigmaDiagnostics};
 use parking_lot::Mutex;
 use slint::Weak;
 use std::sync::{Arc, Weak as StdWeak};
 
 pub struct CatalogController {
     state: Arc<AppState>,
-    ui: Weak<SigmaCanViewer>,
+    ui: Weak<SigmaDiagnostics>,
     mdf4: StdWeak<Mdf4Controller>,
     dbc: StdWeak<DbcController>,
     files: Mutex<Vec<DbcCatalogFile>>,
@@ -25,7 +25,7 @@ pub struct CatalogController {
 impl CatalogController {
     pub fn new(
         state: Arc<AppState>,
-        ui: Weak<SigmaCanViewer>,
+        ui: Weak<SigmaDiagnostics>,
         mdf4: StdWeak<Mdf4Controller>,
         dbc: StdWeak<DbcController>,
     ) -> Self {
@@ -39,7 +39,7 @@ impl CatalogController {
         }
     }
 
-    pub fn wire(self: Arc<Self>, ui: &SigmaCanViewer) {
+    pub fn wire(self: Arc<Self>, ui: &SigmaDiagnostics) {
         let this = self.clone();
         ui.on_open_dbc_catalog({
             let t = this.clone();
@@ -63,7 +63,7 @@ impl CatalogController {
         });
     }
 
-    fn with_ui<F: FnOnce(&SigmaCanViewer)>(&self, f: F) {
+    fn with_ui<F: FnOnce(&SigmaDiagnostics)>(&self, f: F) {
         if let Some(ui) = self.ui.upgrade() {
             f(&ui);
         }

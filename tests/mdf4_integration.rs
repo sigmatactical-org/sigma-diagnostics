@@ -1,6 +1,6 @@
 //! MDF4 loading integration test.
 //!
-//! This test verifies that can-viewer can correctly load and decode MDF4 files
+//! This test verifies that diagnostics can correctly load and decode MDF4 files
 //! created by mdf4-rs, using the same DBC definition as can-frame-generator.
 //!
 //! Two workflows are tested:
@@ -227,11 +227,11 @@ fn test_load_raw_mdf4_and_decode() {
 
     // Generate test MDF4 file
     let mdf_bytes = generate_test_mdf4_raw(&dbc);
-    let temp_path = std::env::temp_dir().join("can_viewer_raw_test.mf4");
+    let temp_path = std::env::temp_dir().join("diagnostics_raw_test.mf4");
     std::fs::write(&temp_path, &mdf_bytes).expect("Failed to write MDF4");
     println!("Generated raw MDF4: {} bytes", mdf_bytes.len());
 
-    // Load MDF4 file (similar to can-viewer's load_mdf4)
+    // Load MDF4 file (similar to diagnostics's load_mdf4)
     let mdf = MDF::from_file(temp_path.to_str().unwrap()).expect("Failed to load MDF4");
 
     let mut total_frames = 0;
@@ -351,7 +351,7 @@ fn test_load_decoded_mdf4() {
 
     // Generate test MDF4 file with decoded signals
     let mdf_bytes = generate_test_mdf4_decoded();
-    let temp_path = std::env::temp_dir().join("can_viewer_decoded_test.mf4");
+    let temp_path = std::env::temp_dir().join("diagnostics_decoded_test.mf4");
     std::fs::write(&temp_path, &mdf_bytes).expect("Failed to write MDF4");
     println!("Generated decoded MDF4: {} bytes", mdf_bytes.len());
 

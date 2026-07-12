@@ -9,7 +9,7 @@ use crate::state::AppState;
 use crate::{
     DbcAttributeRow as UiDbcAttributeRow, DbcMessageRow as UiDbcMessageRow,
     DbcNodeRow as UiDbcNodeRow, DbcSignalRow as UiDbcSignalRow,
-    DbcValueDescRow as UiDbcValueDescRow, SigmaCanViewer,
+    DbcValueDescRow as UiDbcValueDescRow, SigmaDiagnostics,
 };
 use parking_lot::Mutex;
 use slint::Weak;
@@ -17,7 +17,7 @@ use std::sync::{Arc, Weak as StdWeak};
 
 pub struct DbcController {
     state: Arc<AppState>,
-    ui: Weak<SigmaCanViewer>,
+    ui: Weak<SigmaDiagnostics>,
     /// Header MDF4/DBC buttons own file loading; this tab edits that master DBC.
     file_master: Mutex<StdWeak<Mdf4Controller>>,
     edit_state: Mutex<DbcInfo>,
@@ -29,7 +29,7 @@ pub struct DbcController {
 }
 
 impl DbcController {
-    pub fn new(state: Arc<AppState>, ui: Weak<SigmaCanViewer>) -> Self {
+    pub fn new(state: Arc<AppState>, ui: Weak<SigmaDiagnostics>) -> Self {
         Self {
             state,
             ui,
@@ -47,7 +47,7 @@ impl DbcController {
         *self.file_master.lock() = mdf4;
     }
 
-    pub fn wire(self: Arc<Self>, ui: &SigmaCanViewer) {
+    pub fn wire(self: Arc<Self>, ui: &SigmaDiagnostics) {
         if let Ok(Some(info)) = get_dbc_info(&self.state) {
             *self.edit_state.lock() = info;
             *self.path.lock() = get_dbc_path(&self.state);
@@ -118,7 +118,7 @@ impl DbcController {
         }
     }
 
-    fn with_ui<F: FnOnce(&SigmaCanViewer)>(&self, f: F) {
+    fn with_ui<F: FnOnce(&SigmaDiagnostics)>(&self, f: F) {
         if let Some(ui) = self.ui.upgrade() {
             f(&ui);
         }

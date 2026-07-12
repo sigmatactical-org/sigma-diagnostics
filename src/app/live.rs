@@ -3,7 +3,7 @@
 use super::helpers::{pick_save_file, set_status, vec_model};
 use crate::services::{is_capture_running, list_can_interfaces, start_capture, stop_capture};
 use crate::state::AppState;
-use crate::{LiveErrorRow, LiveFrameRow, LiveMessageRow, LiveSignalRow, SigmaCanViewer};
+use crate::{LiveErrorRow, LiveFrameRow, LiveMessageRow, LiveSignalRow, SigmaDiagnostics};
 use parking_lot::Mutex;
 use slint::{Model, SharedString, Timer, TimerMode, Weak};
 use std::rc::Rc;
@@ -11,14 +11,14 @@ use std::sync::Arc;
 
 pub struct LiveController {
     state: Arc<AppState>,
-    ui: Weak<SigmaCanViewer>,
+    ui: Weak<SigmaDiagnostics>,
     capture_session: Arc<Mutex<Option<crate::services::CaptureSession>>>,
     capture_file: Mutex<Option<String>>,
     _timer: Timer,
 }
 
 impl LiveController {
-    pub fn new(state: Arc<AppState>, ui: Weak<SigmaCanViewer>) -> Self {
+    pub fn new(state: Arc<AppState>, ui: Weak<SigmaDiagnostics>) -> Self {
         let capture_session: Arc<Mutex<Option<crate::services::CaptureSession>>> =
             Arc::new(Mutex::new(None));
         let poll_ui = ui.clone();
@@ -47,7 +47,7 @@ impl LiveController {
         }
     }
 
-    pub fn wire(self: Rc<Self>, ui: &SigmaCanViewer) {
+    pub fn wire(self: Rc<Self>, ui: &SigmaDiagnostics) {
         #[cfg(not(target_os = "linux"))]
         ui.set_live_linux_only(false);
 
@@ -72,7 +72,7 @@ impl LiveController {
         });
     }
 
-    fn with_ui<F: FnOnce(&SigmaCanViewer)>(&self, f: F) {
+    fn with_ui<F: FnOnce(&SigmaDiagnostics)>(&self, f: F) {
         if let Some(ui) = self.ui.upgrade() {
             f(&ui);
         }
@@ -111,7 +111,7 @@ impl LiveController {
 
             let interface = self.with_ui_get_interface();
             let capture_file = std::env::temp_dir()
-                .join(format!("can-viewer-capture-{}.mf4", std::process::id()))
+                .join(format!("diagnostics-capture-{}.mf4", std::process::id()))
                 .display()
                 .to_string();
 
@@ -179,7 +179,7 @@ impl LiveController {
     }
 }
 
-fn update_live_display(ui: &SigmaCanViewer, display: &crate::dto::LiveCaptureDisplay) {
+fn update_live_display(ui: &SigmaDiagnostics, display: &crate::dto::LiveCaptureDisplay) {
     let stats = &display.stats;
     ui.set_live_stats_text(
         format!(

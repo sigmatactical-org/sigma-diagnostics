@@ -1,4 +1,4 @@
-name: can-viewer CI
+name: diagnostics CI
 
 on:
   push:

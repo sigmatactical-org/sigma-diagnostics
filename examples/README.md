@@ -1,6 +1,6 @@
-# CAN Viewer Examples
+# Diagnostics Examples
 
-This directory contains sample files for testing CAN Viewer.
+This directory contains sample files for testing Diagnostics.
 
 ## Files
 
@@ -12,25 +12,25 @@ This directory contains sample files for testing CAN Viewer.
 ### Load MDF4 file on startup
 
 ```bash
-can-viewer --mdf4 examples/sample.mf4
+diagnostics --mdf4 examples/sample.mf4
 ```
 
 ### Load DBC file on startup
 
 ```bash
-can-viewer --dbc examples/sample.dbc
+diagnostics --dbc examples/sample.dbc
 ```
 
 ### Load both files on startup
 
 ```bash
-can-viewer --dbc examples/sample.dbc --mdf4 examples/sample.mf4
+diagnostics --dbc examples/sample.dbc --mdf4 examples/sample.mf4
 ```
 
 ### Short options
 
 ```bash
-can-viewer -d examples/sample.dbc -m examples/sample.mf4
+diagnostics -d examples/sample.dbc -m examples/sample.mf4
 ```
 
 ## Running from source

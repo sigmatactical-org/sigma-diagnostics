@@ -7,14 +7,14 @@ mod live;
 mod mdf4;
 
 use crate::state::AppState;
-use crate::SigmaCanViewer;
+use crate::SigmaDiagnostics;
 use slint::ComponentHandle;
 use std::rc::Rc;
 use std::sync::Arc;
 
 /// Run the Slint application event loop.
 pub fn run(state: Arc<AppState>) -> Result<(), slint::PlatformError> {
-    let ui = SigmaCanViewer::new()?;
+    let ui = SigmaDiagnostics::new()?;
     ui.set_version_text(env!("CARGO_PKG_VERSION").into());
     ui.set_status_text("Ready".into());
     crate::about::populate(&ui);

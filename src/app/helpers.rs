@@ -36,7 +36,7 @@ pub fn parse_can_ids(text: &str) -> Vec<u32> {
         .collect()
 }
 
-pub fn set_status(ui: &crate::SigmaCanViewer, message: &str) {
+pub fn set_status(ui: &crate::SigmaDiagnostics, message: &str) {
     ui.set_status_text(message.into());
 }
 

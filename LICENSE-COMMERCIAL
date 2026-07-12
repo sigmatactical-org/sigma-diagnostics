@@ -1,14 +1,14 @@
 COMMERCIAL LICENSE AGREEMENT
 
 This Commercial License Agreement ("Agreement") is entered into between
-the copyright holder of the can-viewer software ("Licensor") and the
+the copyright holder of the diagnostics software ("Licensor") and the
 entity or individual purchasing a commercial license ("Licensee").
 
 1. GRANT OF LICENSE
 
    Subject to the terms and conditions of this Agreement, Licensor
    grants Licensee a non-exclusive, non-transferable license to use,
-   modify, and distribute the can-viewer software in proprietary and
+   modify, and distribute the diagnostics software in proprietary and
    commercial applications without the requirement to:
 
    (a) Disclose source code modifications
@@ -45,4 +45,4 @@ entity or individual purchasing a commercial license ("Licensee").
    IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY DAMAGES ARISING FROM
    USE OF THE SOFTWARE.
 
-For commercial licensing inquiries, please [create an **Issue** in GitHub](https://github.com/reneherrero/can-viewer/issues).
+For commercial licensing inquiries, please [create an **Issue** in GitHub](https://github.com/sigmatactical-org/diagnostics/issues).

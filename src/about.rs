@@ -2,11 +2,11 @@
 
 include!(concat!(env!("OUT_DIR"), "/about_data.rs"));
 
-use crate::{DepRow as UiDepRow, SigmaCanViewer};
+use crate::{DepRow as UiDepRow, SigmaDiagnostics};
 use slint::{ModelRc, VecModel};
 
 /// Populate About tab properties from build-time generated metadata.
-pub fn populate(ui: &SigmaCanViewer) {
+pub fn populate(ui: &SigmaDiagnostics) {
     ui.set_about_copyright(APP_COPYRIGHT.into());
     ui.set_about_license_notice(APP_LICENSE_NOTICE.into());
     ui.set_about_credits(APP_CREDITS.into());

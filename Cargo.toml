@@ -1,15 +1,15 @@
 [package]
-name = "can-viewer"
+name = "diagnostics"
 version = "0.3.0"
 edition = "2021"
-default-run = "can-viewer"
+default-run = "diagnostics"
 license = "MIT OR Apache-2.0"
 authors = ["Sigma Tactical Group contributors <https://github.com/sigmatactical-org>"]
-repository = "https://github.com/sigmatactical-org/can-viewer"
+repository = "https://github.com/sigmatactical-org/diagnostics"
 homepage = "https://sigmatactical.org"
 rust-version = "1.90.0"
 readme = "README.md"
-description = "CAN Viewer — MDF4, SocketCAN, and DBC analysis (Slint UI)"
+description = "Diagnostics — MDF4, SocketCAN, and DBC analysis (Slint UI)"
 keywords = ["can", "mdf4", "dbc", "automotive", "socketcan"]
 categories = ["visualization", "embedded"]
 include = [
@@ -54,11 +54,11 @@ embedded-can = "0.4.1"
 socketcan = "3"
 
 [lib]
-name = "can_viewer"
+name = "diagnostics"
 path = "src/lib.rs"
 
 [[bin]]
-name = "can-viewer"
+name = "diagnostics"
 path = "src/main.rs"
 
 [features]

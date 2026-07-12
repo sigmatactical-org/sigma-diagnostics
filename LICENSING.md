@@ -8,7 +8,7 @@ covered by the dual-licensing model below. See [BRANDING.md](BRANDING.md).
 
 ## Software
 
-can-viewer is available under a **dual-licensing** model:
+diagnostics is available under a **dual-licensing** model:
 
 ## Open Source License (Default)
 
@@ -19,7 +19,7 @@ The software is licensed under either of:
 
 at your option.
 
-This means you can use can-viewer in:
+This means you can use diagnostics in:
 - Open-source projects (any license)
 - Personal projects
 - Educational projects
@@ -29,7 +29,7 @@ This means you can use can-viewer in:
 - Include copyright notices
 - Include license files
 - State any significant changes
-- Third-party crate notices are listed in the in-app **About** tab and generated at build time in `target/*/build/can-viewer-*/out/THIRD_PARTY_NOTICES.txt`
+- Third-party crate notices are listed in the in-app **About** tab and generated at build time in `target/*/build/diagnostics-*/out/THIRD_PARTY_NOTICES.txt`
 
 ## Commercial License
 
@@ -58,7 +58,7 @@ You **do NOT** need a commercial license if:
 
 ### Obtaining a Commercial License
 
-For commercial licensing inquiries, pricing, and terms, please [create an **Issue** in GitHub](https://github.com/reneherrero/can-viewer/issues).
+For commercial licensing inquiries, pricing, and terms, please [create an **Issue** in GitHub](https://github.com/sigmatactical-org/diagnostics/issues).
 
 ## License Compatibility
 
@@ -76,7 +76,7 @@ For commercial licensing inquiries, pricing, and terms, please [create an **Issu
 
 ## Contributions
 
-By contributing to can-viewer, you agree that your contributions will be
+By contributing to diagnostics, you agree that your contributions will be
 licensed under the same dual-licensing model (MIT OR Apache-2.0 for
 open-source, and available for commercial licensing).
 

@@ -25,7 +25,7 @@ pub struct SessionConfig {
 impl SessionConfig {
     /// Get the config directory for the application.
     pub fn config_dir() -> Option<PathBuf> {
-        dirs::config_dir().map(|p| p.join("can-viewer"))
+        dirs::config_dir().map(|p| p.join("diagnostics"))
     }
 
     /// Get the config file path for the application.

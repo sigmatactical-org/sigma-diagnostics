@@ -1,13 +1,13 @@
-//! CAN Viewer — native Slint desktop application.
+//! Diagnostics — native Slint desktop application.
 
-use can_viewer::app;
-use can_viewer::{AppState, InitialFiles};
+use diagnostics::app;
+use diagnostics::{AppState, InitialFiles};
 use clap::Parser;
 use std::sync::Arc;
 
 /// MDF4, SocketCAN, and DBC analysis tool.
 #[derive(Parser, Debug)]
-#[command(author, version, about = "CAN Viewer")]
+#[command(author, version, about = "Diagnostics")]
 struct Args {
     /// DBC file to load on startup
     #[arg(short, long)]

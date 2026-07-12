@@ -685,28 +685,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "can-viewer"
-version = "0.3.0"
-dependencies = [
- "clap",
- "dbc-rs 0.5.2",
- "dirs",
- "embedded-can",
- "env_logger",
- "log",
- "mdf4-rs",
- "parking_lot",
- "rfd",
- "serde",
- "serde_json",
- "slint",
- "slint-build",
- "socketcan",
- "thiserror 2.0.17",
- "ureq",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1177,6 +1155,28 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.111",
+]
+
+[[package]]
+name = "diagnostics"
+version = "0.3.0"
+dependencies = [
+ "clap",
+ "dbc-rs 0.5.2",
+ "dirs",
+ "embedded-can",
+ "env_logger",
+ "log",
+ "mdf4-rs",
+ "parking_lot",
+ "rfd",
+ "serde",
+ "serde_json",
+ "slint",
+ "slint-build",
+ "socketcan",
+ "thiserror 2.0.17",
+ "ureq",
 ]
 
 [[package]]
