@@ -4,8 +4,11 @@ import { ToolbarButton } from "widgets/common.slint";
 export component LogsTab inherits Rectangle {
     callback request-ecu-log();
     callback open-local-mdf4();
+    callback replay-session();
+    callback stop-replay();
 
-    in property <string> status-text: "Import local MDF4 via Analysis → MDF4, or request an ECU export (stub).";
+    in property <string> status-text: "Record WiFi sessions from Connect, replay saved .jsonl files, or import MDF4 for CAN analysis.";
+    in property <bool> replay-active: false;
 
     background: SigmaTheme.background;
 
@@ -13,12 +16,12 @@ export component LogsTab inherits Rectangle {
         padding: 12px;
         spacing: 10px;
         Text {
-            text: "Logs";
+            text: "Logs & sessions";
             color: SigmaTheme.text;
             font-weight: 700;
         }
         Text {
-            text: "Bulk MDF4 pull from the bike is not available over CAN yet. Use local import for analysis; ECU request is a protocol stub.";
+            text: "WiFi telemetry sessions are saved as NDJSON under ~/.config/sigma-racer-mechanic/sessions/. Replay drives the Diagnosis tab; import MDF4 for raw CAN analysis.";
             color: SigmaTheme.text-dim;
             wrap: word-wrap;
             font-size: SigmaTheme.font-size-small;
@@ -26,12 +29,18 @@ export component LogsTab inherits Rectangle {
         HorizontalLayout {
             spacing: 8px;
             ToolbarButton {
-                label: "Open local MDF4…";
-                clicked => { root.open-local-mdf4(); }
+                label: "Replay session…";
+                enabled: !root.replay-active;
+                clicked => { root.replay-session(); }
             }
             ToolbarButton {
-                label: "Request log from ECU";
-                clicked => { root.request-ecu-log(); }
+                label: "Stop replay";
+                enabled: root.replay-active;
+                clicked => { root.stop-replay(); }
+            }
+            ToolbarButton {
+                label: "Open local MDF4…";
+                clicked => { root.open-local-mdf4(); }
             }
         }
         Text {

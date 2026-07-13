@@ -28,6 +28,7 @@ ureq = { workspace = true }
 mdf4-rs = { workspace = true }
 dbc-rs = { workspace = true }
 embedded-can = { workspace = true }
+sigma-racer-telemetry = { git = "https://github.com/sigmatactical-org/sigma-racer-telemetry.git", rev = "dfa61eb" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 socketcan = { workspace = true }

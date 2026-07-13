@@ -7,27 +7,36 @@ export component ConnectTab inherits Rectangle {
     callback connect-vehicle();
     callback disconnect-vehicle();
 
+    in-out property <[string]> transport-options: ["SocketCAN", "WiFi"];
+    in-out property <int> selected-transport: 0;
     in-out property <[string]> interfaces;
     in-out property <int> selected-interface: 0;
     in-out property <string> bitrate-text: "500000";
+    in-out property <string> wifi-host: "";
+    in-out property <string> wifi-port: "7357";
     in-out property <bool> use-m7-dbc: true;
+    in-out property <bool> record-session: true;
     in-out property <bool> connected: false;
     in-out property <string> status-label: "Disconnected";
     in-out property <string> status-detail: "";
 
     background: SigmaTheme.background;
 
+    property <bool> wifi-mode: root.selected-transport == 1;
+
     VerticalLayout {
         padding: 12px;
         spacing: 10px;
 
         Text {
-            text: "Vehicle connection (SocketCAN)";
+            text: "Vehicle connection";
             color: SigmaTheme.text;
             font-weight: 700;
         }
         Text {
-            text: "Connect a USB-CAN adapter to the bike diagnostic / OBD port. Configure the interface bitrate with ip link (Classic CAN 500 kbit/s is typical for shop ports).";
+            text: root.wifi-mode
+                ? "Connect to the Wingman mTLS telemetry relay (TLS 1.3, port 7357). Install client certificates under ~/.config/sigma-racer-mechanic/tls/. Plain TCP is rejected."
+                : "Connect a USB-CAN adapter to the bike diagnostic / OBD port. Configure the interface bitrate with ip link (Classic CAN 500 kbit/s is typical for shop ports).";
             color: SigmaTheme.text-dim;
             wrap: word-wrap;
             font-size: SigmaTheme.font-size-small;
@@ -37,6 +46,7 @@ export component ConnectTab inherits Rectangle {
             spacing: 8px;
             ToolbarButton {
                 label: "Refresh";
+                enabled: !root.wifi-mode && !root.connected;
                 clicked => { root.refresh-interfaces(); }
             }
             ToolbarButton {
@@ -61,6 +71,16 @@ export component ConnectTab inherits Rectangle {
             spacing: 12px;
             VerticalLayout {
                 spacing: 4px;
+                width: 160px;
+                Text { text: "Transport"; color: SigmaTheme.text-dim; font-size: 9px; }
+                ComboBox {
+                    model: root.transport-options;
+                    current-index <=> root.selected-transport;
+                    enabled: !root.connected;
+                }
+            }
+            if !root.wifi-mode: VerticalLayout {
+                spacing: 4px;
                 width: 220px;
                 Text { text: "Interface"; color: SigmaTheme.text-dim; font-size: 9px; }
                 if root.interfaces.length > 0: ComboBox {
@@ -74,12 +94,32 @@ export component ConnectTab inherits Rectangle {
                     font-size: SigmaTheme.font-size-small;
                 }
             }
-            VerticalLayout {
+            if !root.wifi-mode: VerticalLayout {
                 spacing: 4px;
                 width: 140px;
                 Text { text: "Bitrate (hint)"; color: SigmaTheme.text-dim; font-size: 9px; }
                 LineEdit {
                     text <=> root.bitrate-text;
+                    enabled: !root.connected;
+                    height: 28px;
+                }
+            }
+            if root.wifi-mode: VerticalLayout {
+                spacing: 4px;
+                width: 220px;
+                Text { text: "Wingman host"; color: SigmaTheme.text-dim; font-size: 9px; }
+                LineEdit {
+                    text <=> root.wifi-host;
+                    enabled: !root.connected;
+                    height: 28px;
+                }
+            }
+            if root.wifi-mode: VerticalLayout {
+                spacing: 4px;
+                width: 100px;
+                Text { text: "Port"; color: SigmaTheme.text-dim; font-size: 9px; }
+                LineEdit {
+                    text <=> root.wifi-port;
                     enabled: !root.connected;
                     height: 28px;
                 }
@@ -92,6 +132,11 @@ export component ConnectTab inherits Rectangle {
                     checked <=> root.use-m7-dbc;
                     enabled: !root.connected;
                     text: "Load M7 draft DBC";
+                }
+                if root.wifi-mode: CheckBox {
+                    checked <=> root.record-session;
+                    enabled: !root.connected;
+                    text: "Record session (.jsonl)";
                 }
             }
         }

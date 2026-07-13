@@ -9,6 +9,7 @@ on:
       - 'sigma-racer-mechanic/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
+      - '.cargo/**'
       - '.github/workflows/ci.yml'
   pull_request:
     branches: [main]
@@ -18,6 +19,7 @@ on:
       - 'sigma-racer-mechanic/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
+      - '.cargo/**'
       - '.github/workflows/ci.yml'
 
 env:
@@ -28,12 +30,29 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: embedded/diagnostics
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: embedded/diagnostics
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-telemetry
+          path: embedded/sigma-racer-telemetry
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-sidearm
+          path: embedded/sigma-racer-sidearm
 
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: embedded/diagnostics
 
       - name: Install Slint system dependencies
         run: |
@@ -45,14 +64,31 @@ jobs:
   msrv:
     name: MSRV
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: embedded/diagnostics
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: embedded/diagnostics
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-telemetry
+          path: embedded/sigma-racer-telemetry
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-sidearm
+          path: embedded/sigma-racer-sidearm
 
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.MSRV }}
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: embedded/diagnostics
 
       - name: Install Slint system dependencies
         run: |
@@ -64,14 +100,31 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: embedded/diagnostics
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: embedded/diagnostics
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-telemetry
+          path: embedded/sigma-racer-telemetry
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-sidearm
+          path: embedded/sigma-racer-sidearm
 
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: embedded/diagnostics
 
       - name: Install Slint system dependencies
         run: |
@@ -83,8 +136,13 @@ jobs:
   fmt:
     name: Format
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: embedded/diagnostics
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: embedded/diagnostics
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -96,12 +154,29 @@ jobs:
   release-build:
     name: Release build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: embedded/diagnostics
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: embedded/diagnostics
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-telemetry
+          path: embedded/sigma-racer-telemetry
+
+      - uses: actions/checkout@v4
+        with:
+          repository: sigmatactical-org/sigma-racer-sidearm
+          path: embedded/sigma-racer-sidearm
 
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: embedded/diagnostics
 
       - name: Install Slint system dependencies
         run: |

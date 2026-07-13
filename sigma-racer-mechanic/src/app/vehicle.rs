@@ -3,9 +3,9 @@
 use crate::state::AppState;
 use crate::{SettingRow, SigmaRacerMechanic, VitalRow};
 use sigma_diagnostics::{
-    fetch_channel_latest, list_can_interfaces, request_log_export, LogExportRequest,
-    MaintenanceAction, MaintenanceService, OtaConfig, SettingsService, StubMaintenanceService,
-    StubSettingsService, VehicleLinkConfig,
+    default_sessions_dir, fetch_channel_latest, list_can_interfaces, request_log_export,
+    LogExportRequest, MaintenanceAction, MaintenanceService, OtaConfig, SettingsService,
+    StubMaintenanceService, StubSettingsService, VehicleLinkConfig, VehicleTransport,
 };
 use slint::{Model, ModelRc, VecModel, Weak};
 use std::rc::Rc;
@@ -66,6 +66,14 @@ impl VehicleController {
             let t = self.clone();
             move || t.open_local_mdf4()
         });
+        ui.on_replay_session({
+            let t = self.clone();
+            move || t.replay_session()
+        });
+        ui.on_stop_replay({
+            let t = self.clone();
+            move || t.stop_replay()
+        });
     }
 
     fn with_ui<F: FnOnce(&SigmaRacerMechanic)>(&self, f: F) {
@@ -93,6 +101,7 @@ impl VehicleController {
 
     fn connect(&self) {
         self.with_ui(|ui| {
+            let wifi_mode = ui.get_vehicle_selected_transport() == 1;
             let ifaces = ui.get_vehicle_interfaces();
             let idx = ui.get_vehicle_selected_interface() as usize;
             let iface = ifaces
@@ -101,26 +110,61 @@ impl VehicleController {
                 .unwrap_or_else(|| "can0".into());
             let bitrate = ui.get_vehicle_bitrate().parse::<u32>().unwrap_or(500_000);
             let use_m7 = ui.get_vehicle_use_m7_dbc();
+            let wifi_host = ui.get_vehicle_wifi_host().to_string();
+            let wifi_port = ui
+                .get_vehicle_wifi_port()
+                .parse::<u16>()
+                .unwrap_or(sigma_diagnostics::DEFAULT_WIFI_PORT);
+            let record_session = ui.get_vehicle_record_session();
+
+            let transport = if wifi_mode {
+                VehicleTransport::WiFi
+            } else {
+                VehicleTransport::SocketCan
+            };
 
             self.state.vehicle.set_config(VehicleLinkConfig {
+                transport,
                 interface: iface.clone(),
                 bitrate,
+                wifi_host: wifi_host.clone(),
+                wifi_port,
                 use_m7_draft_dbc: use_m7,
+                record_session,
             });
 
             match self.state.vehicle.connect(&self.state.analysis.diag) {
                 Ok(()) => {
-                    let _ = self
-                        .state
-                        .mechanic_session
-                        .lock()
-                        .set_can_interface(Some(iface.clone()));
+                    if !wifi_mode {
+                        let _ = self
+                            .state
+                            .mechanic_session
+                            .lock()
+                            .set_can_interface(Some(iface.clone()));
+                    }
+                    ui.set_logs_replay_active(false);
                     ui.set_vehicle_connected(true);
                     ui.set_vehicle_status_label("Connected".into());
-                    ui.set_vehicle_status_detail(
-                        format!("Listening on {iface} (bitrate hint {bitrate})").into(),
+                    let detail = if wifi_mode {
+                        let rec = self
+                            .state
+                            .vehicle
+                            .recording_path()
+                            .map(|p| format!("Recording to {}", p.display()))
+                            .unwrap_or_else(|| format!("Streaming from {wifi_host}:{wifi_port}"));
+                        rec
+                    } else {
+                        format!("Listening on {iface} (bitrate hint {bitrate})")
+                    };
+                    ui.set_vehicle_status_detail(detail.into());
+                    ui.set_status_text(
+                        if wifi_mode {
+                            format!("WiFi telemetry from {wifi_host}:{wifi_port}")
+                        } else {
+                            format!("Connected to {iface}")
+                        }
+                        .into(),
                     );
-                    ui.set_status_text(format!("Connected to {iface}").into());
                     ui.set_diag_status("Receiving".into());
                 }
                 Err(e) => {
@@ -134,18 +178,33 @@ impl VehicleController {
     }
 
     fn disconnect(&self) {
+        let recording = self.state.vehicle.recording_path();
         self.state.vehicle.disconnect(&self.state.analysis.diag);
         self.with_ui(|ui| {
             ui.set_vehicle_connected(false);
             ui.set_vehicle_status_label("Disconnected".into());
-            ui.set_vehicle_status_detail("".into());
+            let detail = recording
+                .as_ref()
+                .map(|p| format!("Session saved to {}", p.display()))
+                .unwrap_or_default();
+            ui.set_vehicle_status_detail(detail.into());
             ui.set_diag_status("Not connected".into());
             ui.set_status_text("Disconnected".into());
+            if let Some(path) = recording {
+                ui.set_logs_status(
+                    format!(
+                        "Session saved to {} — use Replay session to review.",
+                        path.display()
+                    )
+                    .into(),
+                );
+            }
         });
     }
 
     pub fn poll_diagnosis_into(&self, ui: &SigmaRacerMechanic) {
-        if !ui.get_vehicle_connected() {
+        let replaying = ui.get_logs_replay_active();
+        if !ui.get_vehicle_connected() && !replaying {
             return;
         }
         let snap = self.state.vehicle.poll_diagnosis(&self.state.analysis.diag);
@@ -172,7 +231,20 @@ impl VehicleController {
         ui.set_diag_vitals(ModelRc::new(VecModel::from(rows)));
 
         if !snap.connected {
-            ui.set_vehicle_status_label("Disconnected".into());
+            ui.set_vehicle_status_label(
+                if replaying {
+                    "Replay finished"
+                } else {
+                    "Disconnected"
+                }
+                .into(),
+            );
+            if replaying {
+                ui.set_logs_replay_active(false);
+                ui.set_vehicle_connected(false);
+            }
+        } else if replaying {
+            ui.set_vehicle_connected(true);
         }
     }
 
@@ -311,6 +383,52 @@ impl VehicleController {
                 "Switched to Analysis → MDF4 — use header MDF4 button or Open.".into(),
             );
             ui.invoke_open_mdf4();
+        });
+    }
+
+    fn replay_session(&self) {
+        let start_dir = default_sessions_dir();
+        let path = rfd::FileDialog::new()
+            .set_title("Replay telemetry session")
+            .add_filter("NDJSON session", &["jsonl"])
+            .set_directory(start_dir)
+            .pick_file();
+        let Some(path) = path else {
+            return;
+        };
+        match self.state.vehicle.start_replay(path.clone()) {
+            Ok(()) => {
+                self.with_ui(|ui| {
+                    ui.set_logs_replay_active(true);
+                    ui.set_vehicle_connected(true);
+                    ui.set_vehicle_status_label("Replaying".into());
+                    ui.set_vehicle_status_detail(path.display().to_string().into());
+                    ui.set_active_tab(1);
+                    ui.set_logs_status(
+                        format!("Replaying {} — open Diagnosis tab.", path.display()).into(),
+                    );
+                    ui.set_status_text(format!("Replay: {}", path.display()).into());
+                });
+            }
+            Err(e) => {
+                self.with_ui(|ui| {
+                    ui.set_logs_status(e.clone().into());
+                    ui.set_status_text(e.into());
+                });
+            }
+        }
+    }
+
+    fn stop_replay(&self) {
+        self.state.vehicle.stop_replay();
+        self.with_ui(|ui| {
+            ui.set_logs_replay_active(false);
+            ui.set_vehicle_connected(false);
+            ui.set_vehicle_status_label("Disconnected".into());
+            ui.set_vehicle_status_detail("Replay stopped".into());
+            ui.set_diag_status("Not connected".into());
+            ui.set_logs_status("Replay stopped.".into());
+            ui.set_status_text("Replay stopped".into());
         });
     }
 }

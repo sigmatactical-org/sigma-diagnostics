@@ -1,6 +1,7 @@
-//! Live diagnosis snapshot from decoded vehicle CAN frames.
+//! Live diagnosis snapshot from decoded vehicle CAN frames or VSS telemetry.
 
 use crate::dto::{LiveCaptureDisplay, LiveSignalRow};
+use sigma_racer_telemetry::VehicleState;
 
 /// One vital for the Mechanic diagnosis panel (VSS-aligned labels).
 #[derive(Debug, Clone, Default)]
@@ -56,6 +57,63 @@ impl DiagnosisSnapshot {
             .collect();
 
         snap
+    }
+
+    /// Build a snapshot from Wingman VSS telemetry (WiFi / replay).
+    pub fn from_vehicle_state(
+        state: &VehicleState,
+        connected: bool,
+        seq: u64,
+        status: &str,
+    ) -> Self {
+        Self {
+            connected,
+            frame_count: seq,
+            rpm: format!("{:.0} rpm", state.rpm),
+            coolant_c: format!("{} °C", state.coolant_c),
+            oil_c: format!("{} °C", state.oil_c),
+            dtc_count: state.dtc.to_string(),
+            gear: state.gear.to_string(),
+            side_stand: if state.side_stand {
+                "Down".into()
+            } else {
+                "Up".into()
+            },
+            performance_mode: state.riding_mode.clone(),
+            vitals: vec![
+                VitalSignal {
+                    name: "Vehicle.Speed".into(),
+                    value: format!("{:.0}", state.speed),
+                    unit: "km/h".into(),
+                },
+                VitalSignal {
+                    name: "Vehicle.Powertrain.CombustionEngine.ThrottlePosition".into(),
+                    value: format!("{:.0}", state.throttle_pct),
+                    unit: "%".into(),
+                },
+                VitalSignal {
+                    name: "Vehicle.FuelSystem.Level".into(),
+                    value: format!("{:.0}", state.fuel_pct),
+                    unit: "%".into(),
+                },
+                VitalSignal {
+                    name: "Vehicle.ElectricalSystem.Battery.Voltage".into(),
+                    value: format!("{:.1}", state.battery_v),
+                    unit: "V".into(),
+                },
+                VitalSignal {
+                    name: "Vehicle.Acceleration.Lateral".into(),
+                    value: format!("{:.1}", state.lean_angle),
+                    unit: "°".into(),
+                },
+                VitalSignal {
+                    name: "Vehicle.TraveledDistance".into(),
+                    value: format!("{:.1}", state.odometer),
+                    unit: "km".into(),
+                },
+            ],
+            status: status.to_string(),
+        }
     }
 
     /// Empty disconnected snapshot with a status message.

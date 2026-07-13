@@ -37,8 +37,12 @@ export component SigmaRacerMechanic inherits Window {
     callback disconnect-vehicle();
     in-out property <[string]> vehicle-interfaces;
     in-out property <int> vehicle-selected-interface: 0;
+    in-out property <int> vehicle-selected-transport: 0;
     in-out property <string> vehicle-bitrate: "500000";
+    in-out property <string> vehicle-wifi-host: "";
+    in-out property <string> vehicle-wifi-port: "7357";
     in-out property <bool> vehicle-use-m7-dbc: true;
+    in-out property <bool> vehicle-record-session: true;
     in-out property <bool> vehicle-connected: false;
     in-out property <string> vehicle-status-label: "Disconnected";
     in-out property <string> vehicle-status-detail: "";
@@ -76,7 +80,10 @@ export component SigmaRacerMechanic inherits Window {
 
     callback request-ecu-log();
     callback open-local-mdf4-from-logs();
-    in-out property <string> logs-status: "Import local MDF4 via Analysis → MDF4, or request an ECU export (stub).";
+    callback replay-session();
+    callback stop-replay();
+    in-out property <string> logs-status: "Record WiFi sessions from Connect, replay saved .jsonl files, or import MDF4 for CAN analysis.";
+    in-out property <bool> logs-replay-active: false;
 
     // —— Analysis (same surface as can-viewer) ——
     callback open-mdf4();
@@ -260,10 +267,14 @@ export component SigmaRacerMechanic inherits Window {
 
                 if root.active-tab == 0: ConnectTab {
                     width: 100%; height: 100%;
+                    selected-transport <=> root.vehicle-selected-transport;
                     interfaces <=> root.vehicle-interfaces;
                     selected-interface <=> root.vehicle-selected-interface;
                     bitrate-text <=> root.vehicle-bitrate;
+                    wifi-host <=> root.vehicle-wifi-host;
+                    wifi-port <=> root.vehicle-wifi-port;
                     use-m7-dbc <=> root.vehicle-use-m7-dbc;
+                    record-session <=> root.vehicle-record-session;
                     connected <=> root.vehicle-connected;
                     status-label <=> root.vehicle-status-label;
                     status-detail <=> root.vehicle-status-detail;
@@ -316,7 +327,9 @@ export component SigmaRacerMechanic inherits Window {
                 if root.active-tab == 5: LogsTab {
                     width: 100%; height: 100%;
                     status-text: root.logs-status;
-                    request-ecu-log => { root.request-ecu-log(); }
+                    replay-active: root.logs-replay-active;
+                    replay-session => { root.replay-session(); }
+                    stop-replay => { root.stop-replay(); }
                     open-local-mdf4 => { root.open-local-mdf4-from-logs(); }
                 }
                 if root.active-tab == 6: Mdf4Tab {
