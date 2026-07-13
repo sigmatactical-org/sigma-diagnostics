@@ -1,8 +1,8 @@
-# Diagnostics — Architecture
+# Sigma Diagnostics — Architecture
 
 ## Overview
 
-The **diagnostics** repository is a Cargo workspace with three members:
+The **sigma-diagnostics** repository is a Cargo workspace with three members:
 
 - **`sigma-diagnostics`** — reusable domain library (DBC/MDF4/decode/filter/capture/updates/**vehicle**)
 - **`can-viewer`** — slim Slint desktop app for MDF4 / Live / DBC analysis
@@ -32,7 +32,7 @@ Domain logic has no WebView or Tauri layer. Firmware crates can depend on `sigma
 ## Directory structure
 
 ```
-diagnostics/
+sigma-diagnostics/
 ├── Cargo.toml                 # workspace: can-viewer, sigma-diagnostics, sigma-racer-mechanic
 ├── sigma-diagnostics/         # shared domain
 │   ├── data/m7-draft.dbc      # embedded M7 draft (synced from wingman schemas)
@@ -54,7 +54,7 @@ Shop PC talks to the bike over **SocketCAN** (USB-CAN on the diagnostic/OBD port
 
 | App | Config dir |
 |-----|------------|
-| can-viewer | `~/.config/diagnostics` |
+| can-viewer | `~/.config/sigma-diagnostics` |
 | sigma-racer-mechanic | `~/.config/sigma-racer-mechanic` |
 
-DBC catalog cache is shared at `~/.config/diagnostics/dbc-cache/`.
+DBC catalog cache is shared at `~/.config/sigma-diagnostics/dbc-cache/`.

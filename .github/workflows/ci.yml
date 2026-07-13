@@ -1,4 +1,4 @@
-name: diagnostics CI
+name: sigma-diagnostics CI
 
 on:
   push:
@@ -32,11 +32,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: embedded/diagnostics
+        working-directory: embedded/sigma-diagnostics
     steps:
       - uses: actions/checkout@v4
         with:
-          path: embedded/diagnostics
+          path: embedded/sigma-diagnostics
 
       - uses: actions/checkout@v4
         with:
@@ -52,7 +52,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: embedded/diagnostics
+          workspaces: embedded/sigma-diagnostics
 
       - name: Install Slint system dependencies
         run: |
@@ -66,11 +66,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: embedded/diagnostics
+        working-directory: embedded/sigma-diagnostics
     steps:
       - uses: actions/checkout@v4
         with:
-          path: embedded/diagnostics
+          path: embedded/sigma-diagnostics
 
       - uses: actions/checkout@v4
         with:
@@ -88,7 +88,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: embedded/diagnostics
+          workspaces: embedded/sigma-diagnostics
 
       - name: Install Slint system dependencies
         run: |
@@ -102,11 +102,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: embedded/diagnostics
+        working-directory: embedded/sigma-diagnostics
     steps:
       - uses: actions/checkout@v4
         with:
-          path: embedded/diagnostics
+          path: embedded/sigma-diagnostics
 
       - uses: actions/checkout@v4
         with:
@@ -124,7 +124,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: embedded/diagnostics
+          workspaces: embedded/sigma-diagnostics
 
       - name: Install Slint system dependencies
         run: |
@@ -138,11 +138,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: embedded/diagnostics
+        working-directory: embedded/sigma-diagnostics
     steps:
       - uses: actions/checkout@v4
         with:
-          path: embedded/diagnostics
+          path: embedded/sigma-diagnostics
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -156,11 +156,11 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: embedded/diagnostics
+        working-directory: embedded/sigma-diagnostics
     steps:
       - uses: actions/checkout@v4
         with:
-          path: embedded/diagnostics
+          path: embedded/sigma-diagnostics
 
       - uses: actions/checkout@v4
         with:
@@ -176,7 +176,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: embedded/diagnostics
+          workspaces: embedded/sigma-diagnostics
 
       - name: Install Slint system dependencies
         run: |

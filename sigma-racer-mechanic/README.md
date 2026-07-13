@@ -9,4 +9,4 @@ cargo run -p sigma-racer-mechanic
 ```
 
 Session config: `~/.config/sigma-racer-mechanic/`. DBC cache is shared with
-`~/.config/diagnostics/dbc-cache/`.
+`~/.config/sigma-diagnostics/dbc-cache/`.

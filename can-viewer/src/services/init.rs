@@ -26,7 +26,7 @@ fn config_sample(name: &str) -> Option<String> {
 /// Get initial files from CLI args or saved session.
 ///
 /// Paths that no longer exist on disk are skipped. Falls back to the sample
-/// files in `~/.config/diagnostics` when session paths are stale.
+/// files in `~/.config/sigma-diagnostics` when session paths are stale.
 pub fn get_initial_files(state: &AppState) -> InitialFilesResponse {
     let files = state.initial_files.lock();
     let mut session = state.session.lock();

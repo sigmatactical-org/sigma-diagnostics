@@ -25,7 +25,7 @@ impl SessionConfig {
 
     /// Share DBC cache with diagnostics desktop tools.
     pub fn dbc_cache_dir() -> Option<PathBuf> {
-        dirs::config_dir().map(|p| p.join("diagnostics").join("dbc-cache"))
+        dirs::config_dir().map(|p| p.join("sigma-diagnostics").join("dbc-cache"))
     }
 
     pub fn load() -> Self {

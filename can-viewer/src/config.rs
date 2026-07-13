@@ -25,7 +25,7 @@ pub struct SessionConfig {
 impl SessionConfig {
     /// Get the config directory for the application.
     pub fn config_dir() -> Option<PathBuf> {
-        dirs::config_dir().map(|p| p.join("diagnostics"))
+        dirs::config_dir().map(|p| p.join("sigma-diagnostics"))
     }
 
     /// Get the config file path for the application.
@@ -56,10 +56,12 @@ impl SessionConfig {
         if PathBuf::from(&path).is_file() {
             return Some(path);
         }
-        // Rewrite leftover can-viewer locations after the rename to diagnostics.
+        // Rewrite leftover paths after renames (can-viewer → diagnostics → sigma-diagnostics).
         let rewritten = path
-            .replace("/can-viewer/", "/diagnostics/")
-            .replace("/.config/can-viewer", "/.config/diagnostics");
+            .replace("/can-viewer/", "/sigma-diagnostics/")
+            .replace("/.config/can-viewer", "/.config/sigma-diagnostics")
+            .replace("/diagnostics/", "/sigma-diagnostics/")
+            .replace("/.config/diagnostics", "/.config/sigma-diagnostics");
         if rewritten != path && PathBuf::from(&rewritten).is_file() {
             return Some(rewritten);
         }

@@ -1,4 +1,4 @@
-# Diagnostics
+# Sigma Diagnostics
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="can-viewer/ui/assets/sigma-mark.svg">
@@ -28,8 +28,8 @@ Maintained by [Sigma Tactical Group](https://github.com/sigmatactical-org). See 
 ## From source
 
 ```bash
-git clone https://github.com/sigmatactical-org/diagnostics.git
-cd diagnostics
+git clone https://github.com/sigmatactical-org/sigma-diagnostics.git
+cd sigma-diagnostics
 cargo run -p can-viewer
 # or shop tool:
 cargo run -p sigma-racer-mechanic
@@ -63,7 +63,7 @@ Options:
 | --- | --- |
 | `SIGMA_UPDATES_URL` | Base URL of sigma-updates (default `http://updates.sigma.localtest.me:30080`) |
 
-Downloaded schemas are cached under `~/.config/diagnostics/dbc-cache/`.
+Downloaded schemas are cached under `~/.config/sigma-diagnostics/dbc-cache/`.
 
 ## Brand & artwork
 

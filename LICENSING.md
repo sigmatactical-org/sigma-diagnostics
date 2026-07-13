@@ -15,7 +15,7 @@ The software is licensed under either of:
 
 at your option.
 
-This means you can use diagnostics in:
+This means you can use sigma-diagnostics in:
 - Open-source projects (any license)
 - Personal projects
 - Educational projects
@@ -43,7 +43,7 @@ This means you can use diagnostics in:
 
 ## Contributions
 
-By contributing to diagnostics, you agree that your contributions will be
+By contributing to sigma-diagnostics, you agree that your contributions will be
 licensed under MIT OR Apache-2.0 (at the recipient's option), the same as
 the rest of the software.
 

@@ -7,7 +7,7 @@ version = "0.3.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["Sigma Tactical Group contributors <https://github.com/sigmatactical-org>"]
-repository = "https://github.com/sigmatactical-org/diagnostics"
+repository = "https://github.com/sigmatactical-org/sigma-diagnostics"
 homepage = "https://sigmatactical.org"
 rust-version = "1.90.0"
 
