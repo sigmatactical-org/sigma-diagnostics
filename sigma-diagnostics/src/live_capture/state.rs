@@ -3,13 +3,19 @@
 //! Handles signal decoding and statistics for live display.
 //! MDF4 logging happens in the socket thread for lossless capture.
 
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::time::Instant;
+
+use dbc_rs::FastDbc;
+
 use crate::dto::{
     CanFrameDto, CaptureStatsDto, LiveCaptureDisplay, LiveCaptureUpdate, LiveErrorRow,
     LiveFrameRow, LiveMessageRow, LiveSignalRow, StatsHtml,
 };
-use dbc_rs::FastDbc;
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::time::Instant;
+
+use super::error_entry::ErrorEntry;
+use super::message_entry::MessageEntry;
+use super::signal_entry::{SignalEntry, SignalKey};
 
 /// Maximum recent frames to keep for the frame stream view.
 const MAX_RECENT_FRAMES: usize = 100;
@@ -19,45 +25,6 @@ const MAX_HISTORY_POINTS: usize = 50;
 
 /// Maximum recent errors to keep.
 const MAX_RECENT_ERRORS: usize = 100;
-
-/// Error entry for tracking bus errors.
-struct ErrorEntry {
-    timestamp: f64,
-    channel: String,
-    error_type: String,
-    details: String,
-    count: u64,
-}
-
-/// Internal message monitor entry.
-struct MessageEntry {
-    can_id: u32,
-    message_name: String,
-    data: Vec<u8>,
-    dlc: u8,
-    count: u64,
-    last_update: f64,
-    // For rate calculation
-    last_count: u64,
-    last_rate_time: f64,
-    rate: f64,
-}
-
-/// Signal key: (can_id, signal_index) - avoids string allocation in hot path.
-type SignalKey = (u32, usize);
-
-/// Internal signal monitor entry with history for sparklines.
-struct SignalEntry {
-    signal_name: String,
-    message_name: String,
-    value: f64,
-    unit: String,
-    last_update: f64,
-    // History for sparkline
-    history: VecDeque<f64>,
-    min_value: f64,
-    max_value: f64,
-}
 
 /// Live capture display state - manages data for live display only.
 ///
