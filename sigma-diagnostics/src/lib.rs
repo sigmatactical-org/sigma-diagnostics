@@ -41,7 +41,7 @@ pub use updates::{
 
 pub use vehicle::{
     fetch_channel_latest, load_m7_draft_dbc, request_log_export, ChannelRelease, DiagnosisSnapshot,
-    LogExportRequest, M7_DRAFT_DBC, M7_DRAFT_DBC_NAME, MaintenanceAction, MaintenanceService,
-    OtaConfig, SettingsService, StubMaintenanceService, StubSettingsService, VehicleLinkConfig,
-    VehicleSession, VehicleSessionStatus, VehicleSetting, VitalSignal,
+    LogExportRequest, MaintenanceAction, MaintenanceService, OtaConfig, SettingsService,
+    StubMaintenanceService, StubSettingsService, VehicleLinkConfig, VehicleSession,
+    VehicleSessionStatus, VehicleSetting, VitalSignal, M7_DRAFT_DBC, M7_DRAFT_DBC_NAME,
 };

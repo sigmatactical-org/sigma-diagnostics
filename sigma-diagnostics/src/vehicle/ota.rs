@@ -32,7 +32,8 @@ impl OtaConfig {
                 .trim_end_matches('/')
                 .to_owned(),
             channel: std::env::var("SIGMA_UPDATES_CHANNEL").unwrap_or_else(|_| "dev".into()),
-            current_version: std::env::var("SIGMA_IMAGE_VERSION").unwrap_or_else(|_| "0.0.0".into()),
+            current_version: std::env::var("SIGMA_IMAGE_VERSION")
+                .unwrap_or_else(|_| "0.0.0".into()),
         }
     }
 

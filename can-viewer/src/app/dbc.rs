@@ -676,8 +676,7 @@ impl DbcController {
         let mut msg = msg;
         let live_selected = if editing && selected_signal >= 0 {
             if let Some(sig) = msg.signals.get_mut(selected_signal as usize) {
-                sig.byte_order =
-                    endian_storage(&ui.get_dbc_edit_signal_byte_order()).to_string();
+                sig.byte_order = endian_storage(&ui.get_dbc_edit_signal_byte_order()).to_string();
             }
             Some((
                 ui.get_dbc_edit_signal_start().parse::<u32>().unwrap_or(0),
@@ -770,7 +769,7 @@ fn signal_occupied_bits(start_bit: u32, length: u32, byte_order: &str) -> Vec<u3
         let mut bit = start_bit;
         for _ in 0..length {
             bits.push(bit);
-            if bit % 8 == 0 {
+            if bit.is_multiple_of(8) {
                 bit = bit.saturating_add(15);
             } else {
                 bit = bit.saturating_sub(1);
@@ -866,9 +865,7 @@ fn build_bit_map(
     let used = (0..capacity).filter(|&b| occupancy[b] > 0).count();
     let free = capacity.saturating_sub(used);
     let overlap_bits = (0..capacity).filter(|&b| occupancy[b] >= 2).count();
-    let past_dlc_bits = (capacity..bit_count)
-        .filter(|&b| occupancy[b] > 0)
-        .count();
+    let past_dlc_bits = (capacity..bit_count).filter(|&b| occupancy[b] > 0).count();
 
     let (sel_start, sel_len, sel_name, sel_endian) = if selected_signal >= 0 {
         if let Some(sig) = msg.signals.get(selected_signal as usize) {
@@ -929,7 +926,6 @@ fn build_bit_map(
 
     (rows, summary)
 }
-
 
 /// Chunk byte strips into bands of up to 4 (four columns, wrap to next row).
 fn bit_bands_model(rows: &[(String, Vec<UiDbcBitCell>)]) -> slint::ModelRc<UiDbcBitBand> {

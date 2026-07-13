@@ -2,15 +2,15 @@
 
 use crate::state::AppState;
 use crate::{
-    DepRow, DbcAttributeRow, DbcCatalogRow, DbcMessageRow, DbcNodeRow, DbcSignalRow,
-    DbcValueDescRow, FrameRow, LiveErrorRow, LiveFrameRow, LiveMessageRow, LiveSignalRow,
+    DbcAttributeRow, DbcCatalogRow, DbcMessageRow, DbcNodeRow, DbcSignalRow, DbcValueDescRow,
+    DepRow, FrameRow, LiveErrorRow, LiveFrameRow, LiveMessageRow, LiveSignalRow,
     SigmaRacerMechanic, SignalRow,
 };
 use can_viewer::dto::CanFrameDto;
 use can_viewer::services::{
-    decode_single_frame, export_logs, filter_frames, get_dbc_info, get_dbc_path, is_capture_running,
-    list_can_interfaces, load_dbc, load_mdf4, start_capture, stop_capture, CaptureSession,
-    FilterConfig, MatchStatus,
+    decode_single_frame, export_logs, filter_frames, get_dbc_info, get_dbc_path,
+    is_capture_running, list_can_interfaces, load_dbc, load_mdf4, start_capture, stop_capture,
+    CaptureSession, FilterConfig, MatchStatus,
 };
 use parking_lot::Mutex;
 use slint::{Model, ModelRc, SharedString, VecModel, Weak};
@@ -117,7 +117,9 @@ impl AnalysisController {
         });
         ui.on_export_capture({
             let t = self.clone();
-            move || t.with_ui(|ui| ui.set_status_text("Use MDF4 export after stopping capture".into()))
+            move || {
+                t.with_ui(|ui| ui.set_status_text("Use MDF4 export after stopping capture".into()))
+            }
         });
         ui.on_open_dbc_catalog({
             let t = self.clone();
@@ -188,9 +190,9 @@ impl AnalysisController {
             ui.set_about_transitive_summary(
                 "See the can-viewer About tab for the full third-party crate list.".into(),
             );
-            ui.set_about_notice_lines(ModelRc::new(VecModel::from(vec![
-                SharedString::from("Third-party notices: run can-viewer About for the full list."),
-            ])));
+            ui.set_about_notice_lines(ModelRc::new(VecModel::from(vec![SharedString::from(
+                "Third-party notices: run can-viewer About for the full list.",
+            )])));
             ui.set_about_direct_deps(ModelRc::new(VecModel::from(vec![
                 DepRow {
                     name: "sigma-diagnostics".into(),

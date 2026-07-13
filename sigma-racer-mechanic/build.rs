@@ -2,8 +2,7 @@ fn main() {
     let manifest_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let can_viewer_ui = manifest_dir.join("../can-viewer/ui");
 
-    let config = slint_build::CompilerConfiguration::new()
-        .with_include_paths(vec![can_viewer_ui]);
+    let config = slint_build::CompilerConfiguration::new().with_include_paths(vec![can_viewer_ui]);
 
     slint_build::compile_with_config("ui/app.slint", config).unwrap();
 }

@@ -12,9 +12,9 @@ mod session;
 mod settings;
 
 pub use diagnosis::{DiagnosisSnapshot, VitalSignal};
-pub use logs::{LogExportRequest, request_log_export};
-pub use m7::{M7_DRAFT_DBC, M7_DRAFT_DBC_NAME, load_m7_draft_dbc};
+pub use logs::{request_log_export, LogExportRequest};
+pub use m7::{load_m7_draft_dbc, M7_DRAFT_DBC, M7_DRAFT_DBC_NAME};
 pub use maintenance::{MaintenanceAction, MaintenanceService, StubMaintenanceService};
-pub use ota::{ChannelRelease, OtaConfig, fetch_channel_latest};
+pub use ota::{fetch_channel_latest, ChannelRelease, OtaConfig};
 pub use session::{VehicleLinkConfig, VehicleSession, VehicleSessionStatus};
 pub use settings::{SettingsService, StubSettingsService, VehicleSetting};

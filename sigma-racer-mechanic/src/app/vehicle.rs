@@ -77,7 +77,11 @@ impl VehicleController {
     pub fn refresh_interfaces(&self) {
         let list = list_can_interfaces().unwrap_or_default();
         self.with_ui(|ui| {
-            let model = VecModel::from(list.iter().map(|s| slint::SharedString::from(s.as_str())).collect::<Vec<_>>());
+            let model = VecModel::from(
+                list.iter()
+                    .map(|s| slint::SharedString::from(s.as_str()))
+                    .collect::<Vec<_>>(),
+            );
             ui.set_vehicle_interfaces(ModelRc::new(model));
             if let Some(saved) = self.state.mechanic_session.lock().can_interface.clone() {
                 if let Some(idx) = list.iter().position(|i| i == &saved) {
@@ -95,10 +99,7 @@ impl VehicleController {
                 .row_data(idx)
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| "can0".into());
-            let bitrate = ui
-                .get_vehicle_bitrate()
-                .parse::<u32>()
-                .unwrap_or(500_000);
+            let bitrate = ui.get_vehicle_bitrate().parse::<u32>().unwrap_or(500_000);
             let use_m7 = ui.get_vehicle_use_m7_dbc();
 
             self.state.vehicle.set_config(VehicleLinkConfig {
@@ -199,7 +200,10 @@ impl VehicleController {
                         read_only: s.read_only,
                     })
                     .collect();
-                (rows, "Read-only preview — write protocol pending.".to_string())
+                (
+                    rows,
+                    "Read-only preview — write protocol pending.".to_string(),
+                )
             }
             Err(e) => (Vec::new(), e),
         };
@@ -303,7 +307,9 @@ impl VehicleController {
     fn open_local_mdf4(&self) {
         self.with_ui(|ui| {
             ui.set_active_tab(6);
-            ui.set_logs_status("Switched to Analysis → MDF4 — use header MDF4 button or Open.".into());
+            ui.set_logs_status(
+                "Switched to Analysis → MDF4 — use header MDF4 button or Open.".into(),
+            );
             ui.invoke_open_mdf4();
         });
     }

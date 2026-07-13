@@ -90,16 +90,9 @@ fn apply_signal(snap: &mut DiagnosisSnapshot, sig: &LiveSignalRow) {
         snap.dtc_count = val;
     } else if key.contains("gear") {
         snap.gear = val;
-    } else if key.contains("sidestand") || key.contains("side_stand") || key.contains("sidestand")
-    {
+    } else if key.contains("sidestand") || key.contains("side_stand") || key.contains("sidestand") {
         snap.side_stand = val;
     } else if key.contains("performance") || (key.contains("mode") && msg.contains("throttle")) {
         snap.performance_mode = val;
     }
-}
-
-/// Decode a single frame list into a crude status string (tests / offline).
-#[cfg(test)]
-pub fn frames_to_placeholder_status(frames: &[crate::dto::CanFrameDto]) -> String {
-    format!("{} frames buffered", frames.len())
 }

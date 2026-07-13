@@ -11,8 +11,8 @@ pub mod config;
 pub mod services;
 pub mod state;
 
-pub use state::{AppState, InitialFiles};
 pub use app::{wire_analysis_tabs, AnalysisControllers};
+pub use state::{AppState, InitialFiles};
 
 pub use sigma_diagnostics::dbc_export;
 pub use sigma_diagnostics::decode;
