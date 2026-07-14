@@ -3,6 +3,10 @@
 //! Native Slint desktop application for MDF4 inspection, SocketCAN capture,
 //! and DBC editing. Domain logic lives in [`sigma_diagnostics`].
 
+// deny (not forbid): the Slint-generated UI module carries its own
+// scoped allow(unsafe_code) for vtable statics.
+#![deny(unsafe_code)]
+
 slint::include_modules!();
 
 pub mod about;

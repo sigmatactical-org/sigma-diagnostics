@@ -1,5 +1,7 @@
 //! Sigma Racer Mechanic — shop tool over SocketCAN.
 
+#![forbid(unsafe_code)]
+
 use can_viewer::InitialFiles;
 use clap::Parser;
 use sigma_racer_mechanic::app;

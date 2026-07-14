@@ -1,4 +1,4 @@
-name: sigma-diagnostics CI
+name: CI
 
 on:
   push:

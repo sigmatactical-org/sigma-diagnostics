@@ -2,6 +2,8 @@
 //!
 //! Reusable CAN/DBC/MDF4 services without desktop UI or session persistence.
 
+#![forbid(unsafe_code)]
+
 pub mod capture;
 pub mod dbc;
 pub mod dbc_export;

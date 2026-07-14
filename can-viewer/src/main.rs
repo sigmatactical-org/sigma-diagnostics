@@ -1,5 +1,7 @@
 //! Diagnostics can-viewer — native Slint desktop application.
 
+#![forbid(unsafe_code)]
+
 use can_viewer::app;
 use can_viewer::{AppState, InitialFiles};
 use clap::Parser;
