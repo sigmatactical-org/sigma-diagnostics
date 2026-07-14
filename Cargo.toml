@@ -1,11 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-    "can-viewer",
-    "sigma-diagnostics",
-    "sigma-racer-cluster",
-    "sigma-racer-mechanic",
-]
+members = ["can-viewer", "sigma-diagnostics", "sigma-racer-mechanic"]
 
 [workspace.package]
 version = "0.3.0"

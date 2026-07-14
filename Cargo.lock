@@ -4561,17 +4561,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sigma-racer-cluster"
-version = "0.3.0"
-dependencies = [
- "env_logger",
- "log",
- "sigma-diagnostics",
- "slint",
- "slint-build",
-]
-
-[[package]]
 name = "sigma-racer-mechanic"
 version = "0.3.0"
 dependencies = [

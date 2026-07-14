@@ -15,19 +15,13 @@ The software is licensed under either of:
 
 at your option.
 
-**Exception:** the `sigma-racer-cluster` crate is licensed
-**GPL-3.0-only** ([sigma-racer-cluster/LICENSE](sigma-racer-cluster/LICENSE)).
-It links Slint under Slint's GPL option so the instrument cluster can run
-on embedded hardware without a commercial Slint license. Reusable logic
-stays in the MIT/Apache crates; see
-[sigma-racer-cluster/README.md](sigma-racer-cluster/README.md) for the
-boundary rules and device-shipping obligations.
-
 ### Slint (UI toolkit)
 
 The desktop apps (`can-viewer`, `sigma-racer-mechanic`) distribute under
 the **Slint Royalty-Free License** (attribution in the in-app About tab).
-The cluster uses Slint's **GPL-3.0-only** option instead.
+The on-vehicle instrument cluster lives in the separate
+`sigma-racer-cluster` repository, which uses Slint's **GPL-3.0-only**
+option for embedded deployment; see that repository for its licensing.
 
 This means you can use sigma-diagnostics in:
 - Open-source projects (any license)
