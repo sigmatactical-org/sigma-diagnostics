@@ -1,7 +1,7 @@
 # Sigma Diagnostics
 
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
-[![MSRV](https://img.shields.io/badge/MSRV-1.92.0-blue.svg)](https://www.rust-lang.org)
+[![MSRV](https://img.shields.io/badge/MSRV-1.97.0-blue.svg)](https://www.rust-lang.org)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="can-viewer/ui/assets/sigma-mark.svg">
