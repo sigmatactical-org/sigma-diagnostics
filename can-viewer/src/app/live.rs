@@ -1,6 +1,6 @@
 //! Live capture tab controller.
 
-use super::helpers::{pick_save_file, set_status, vec_model};
+use super::helpers::{pick_save_file, set_status};
 use crate::services::{is_capture_running, list_can_interfaces, start_capture, stop_capture};
 use crate::state::AppState;
 use crate::{LiveErrorRow, LiveFrameRow, LiveMessageRow, LiveSignalRow, SigmaDiagnostics};
@@ -9,6 +9,7 @@ use slint::{Model, SharedString, Timer, TimerMode, Weak};
 use std::rc::Rc;
 use std::sync::Arc;
 
+/// Live tab: SocketCAN capture with optional MDF4 recording.
 pub struct LiveController {
     state: Arc<AppState>,
     ui: Weak<SigmaDiagnostics>,
@@ -18,6 +19,7 @@ pub struct LiveController {
 }
 
 impl LiveController {
+    /// Controller bound to the shared state; starts the 100 ms poll timer.
     pub fn new(state: Arc<AppState>, ui: Weak<SigmaDiagnostics>) -> Self {
         let capture_session: Arc<Mutex<Option<crate::services::CaptureSession>>> =
             Arc::new(Mutex::new(None));
@@ -47,6 +49,7 @@ impl LiveController {
         }
     }
 
+    /// Hook the live tab callbacks.
     pub fn wire(self: Rc<Self>, ui: &SigmaDiagnostics) {
         #[cfg(not(target_os = "linux"))]
         ui.set_live_linux_only(false);
@@ -188,57 +191,5 @@ fn update_live_display(ui: &SigmaDiagnostics, display: &crate::dto::LiveCaptureD
         )
         .into(),
     );
-
-    let messages: Vec<LiveMessageRow> = display
-        .messages
-        .iter()
-        .map(|m| LiveMessageRow {
-            can_id: m.can_id.clone().into(),
-            message_name: m.message_name.clone().into(),
-            data_hex: m.data_hex.clone().into(),
-            count: m.count.clone().into(),
-            rate: m.rate.clone().into(),
-        })
-        .collect();
-    ui.set_live_messages(vec_model(&messages));
-
-    let signals: Vec<LiveSignalRow> = display
-        .signals
-        .iter()
-        .map(|s| LiveSignalRow {
-            message_name: s.message_name.clone().into(),
-            signal_name: s.signal_name.clone().into(),
-            value: s.value.clone().into(),
-            unit: s.unit.clone().into(),
-            min_value: s.min_value.clone().into(),
-            max_value: s.max_value.clone().into(),
-        })
-        .collect();
-    ui.set_live_signals(vec_model(&signals));
-
-    let frames: Vec<LiveFrameRow> = display
-        .frames
-        .iter()
-        .map(|f| LiveFrameRow {
-            timestamp: f.timestamp.clone().into(),
-            can_id: f.can_id.clone().into(),
-            dlc: f.dlc.clone().into(),
-            data_hex: f.data_hex.clone().into(),
-            flags: f.flags.clone().into(),
-        })
-        .collect();
-    ui.set_live_frames(vec_model(&frames));
-
-    let errors: Vec<LiveErrorRow> = display
-        .errors
-        .iter()
-        .map(|e| LiveErrorRow {
-            timestamp: e.timestamp.clone().into(),
-            channel: e.channel.clone().into(),
-            error_type: e.error_type.clone().into(),
-            details: e.details.clone().into(),
-            count: e.count.clone().into(),
-        })
-        .collect();
-    ui.set_live_errors(vec_model(&errors));
+    crate::apply_live_rows!(ui, display);
 }

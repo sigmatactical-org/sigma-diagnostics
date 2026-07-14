@@ -11,16 +11,19 @@ use slint::{Model, ModelRc, VecModel, Weak};
 use std::rc::Rc;
 use std::sync::Arc;
 
+/// Vehicle tab: link session, diagnosis view, OTA and maintenance.
 pub struct VehicleController {
     state: Arc<AppState>,
     ui: Weak<SigmaRacerMechanic>,
 }
 
 impl VehicleController {
+    /// Controller bound to the shared state and UI handle.
     pub fn new(state: Arc<AppState>, ui: Weak<SigmaRacerMechanic>) -> Self {
         Self { state, ui }
     }
 
+    /// Hook the vehicle tab callbacks.
     pub fn wire(self: Rc<Self>, ui: &SigmaRacerMechanic) {
         ui.on_refresh_interfaces({
             let t = self.clone();
@@ -82,6 +85,7 @@ impl VehicleController {
         }
     }
 
+    /// Refresh the CAN interface picker.
     pub fn refresh_interfaces(&self) {
         let list = list_can_interfaces().unwrap_or_default();
         self.with_ui(|ui| {
@@ -202,6 +206,7 @@ impl VehicleController {
         });
     }
 
+    /// Pull the latest diagnosis snapshot into the UI (called on a timer).
     pub fn poll_diagnosis_into(&self, ui: &SigmaRacerMechanic) {
         let replaying = ui.get_logs_replay_active();
         if !ui.get_vehicle_connected() && !replaying {
@@ -260,6 +265,7 @@ impl VehicleController {
         });
     }
 
+    /// Sync the settings pane with the persisted config.
     pub fn refresh_settings(&self) {
         let svc = StubSettingsService;
         let (rows, status) = match svc.list() {
@@ -285,6 +291,7 @@ impl VehicleController {
         });
     }
 
+    /// Seed the OTA pane labels from the environment config.
     pub fn init_ota_labels(&self) {
         let cfg = OtaConfig::from_env();
         self.with_ui(|ui| {

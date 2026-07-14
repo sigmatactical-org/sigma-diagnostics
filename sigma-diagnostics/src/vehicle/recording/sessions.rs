@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Where recorded telemetry sessions are stored.
 pub fn default_sessions_dir() -> PathBuf {
     std::env::var("HOME")
         .map(PathBuf::from)
@@ -12,6 +13,7 @@ pub fn default_sessions_dir() -> PathBuf {
         .join("sessions")
 }
 
+/// Timestamped path for a new session recording.
 pub fn new_session_path() -> PathBuf {
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)

@@ -7,6 +7,7 @@ pub enum MaintenanceAction {
 }
 
 impl MaintenanceAction {
+    /// Human-readable action name.
     pub fn label(self) -> &'static str {
         match self {
             Self::ResetServiceInterval => "Reset service interval",

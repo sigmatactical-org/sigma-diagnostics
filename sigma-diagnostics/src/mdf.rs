@@ -153,6 +153,24 @@ pub fn parse_can_dataframe(
     Some(frame)
 }
 
+/// Log one captured frame into a raw CAN logger, dispatching on
+/// FD/extended/BRS/ESI flags. Shared by live capture and export.
+pub fn log_frame(logger: &mut RawCanLogger<mdf4_rs::writer::VecWriter>, frame: &CanFrameDto) {
+    let timestamp_us = (frame.timestamp * 1_000_000.0) as u64;
+    if frame.is_fd {
+        let flags = FdFlags::new(frame.brs, frame.esi);
+        if frame.is_extended {
+            logger.log_fd_extended(frame.can_id, timestamp_us, &frame.data, flags);
+        } else {
+            logger.log_fd(frame.can_id, timestamp_us, &frame.data, flags);
+        }
+    } else if frame.is_extended {
+        logger.log_extended(frame.can_id, timestamp_us, &frame.data);
+    } else {
+        logger.log(frame.can_id, timestamp_us, &frame.data);
+    }
+}
+
 /// Export CAN frames to an MDF4 file.
 pub fn export_logs(path: &str, frames: &[CanFrameDto]) -> Result<usize, String> {
     if frames.is_empty() {
@@ -162,20 +180,7 @@ pub fn export_logs(path: &str, frames: &[CanFrameDto]) -> Result<usize, String> 
     let mut logger = RawCanLogger::new().map_err(|e| format!("Failed to create logger: {e:?}"))?;
 
     for frame in frames {
-        let timestamp_us = (frame.timestamp * 1_000_000.0) as u64;
-
-        if frame.is_fd {
-            let flags = FdFlags::new(frame.brs, frame.esi);
-            if frame.is_extended {
-                logger.log_fd_extended(frame.can_id, timestamp_us, &frame.data, flags);
-            } else {
-                logger.log_fd(frame.can_id, timestamp_us, &frame.data, flags);
-            }
-        } else if frame.is_extended {
-            logger.log_extended(frame.can_id, timestamp_us, &frame.data);
-        } else {
-            logger.log(frame.can_id, timestamp_us, &frame.data);
-        }
+        log_frame(&mut logger, frame);
     }
 
     let mdf_bytes = logger

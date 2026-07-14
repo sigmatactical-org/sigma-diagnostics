@@ -13,6 +13,7 @@ use parking_lot::Mutex;
 use slint::Weak;
 use std::sync::{Arc, Weak as StdWeak};
 
+/// DBC catalog tab: browse and download dictionaries from sigma-updates.
 pub struct CatalogController {
     state: Arc<AppState>,
     ui: Weak<SigmaDiagnostics>,
@@ -23,6 +24,7 @@ pub struct CatalogController {
 }
 
 impl CatalogController {
+    /// Controller bound to the shared state and UI handle.
     pub fn new(
         state: Arc<AppState>,
         ui: Weak<SigmaDiagnostics>,
@@ -39,6 +41,7 @@ impl CatalogController {
         }
     }
 
+    /// Hook the catalog tab callbacks.
     pub fn wire(self: Arc<Self>, ui: &SigmaDiagnostics) {
         let this = self.clone();
         ui.on_open_dbc_catalog({

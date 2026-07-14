@@ -5,10 +5,12 @@ use crate::dto::{AttributeValueType, DbcInfo};
 use super::super::helpers::parse_hex_id;
 use super::endian::endian_storage;
 
+/// First unused CAN id for a newly created message.
 pub(super) fn next_message_id(info: &DbcInfo) -> u32 {
     info.messages.iter().map(|m| m.id).max().unwrap_or(255) + 1
 }
 
+/// Apply edited message fields back into the DBC model.
 pub(super) fn apply_message_edits_values(
     info: &mut DbcInfo,
     idx: i32,
@@ -60,6 +62,7 @@ pub(super) fn apply_signal_edits_values(
     }
 }
 
+/// Short human-readable form of an attribute's type/range.
 pub(super) fn attribute_value_summary(value_type: &AttributeValueType) -> String {
     match value_type {
         AttributeValueType::Int { min, max } => format!("INT {min}..{max}"),
@@ -70,6 +73,7 @@ pub(super) fn attribute_value_summary(value_type: &AttributeValueType) -> String
     }
 }
 
+/// Apply edited node fields back into the DBC model.
 pub(super) fn apply_node_edits_values(info: &mut DbcInfo, idx: i32, name: &str, comment: &str) {
     if idx < 0 {
         return;

@@ -28,6 +28,7 @@ pub struct DiagnosticsState {
 }
 
 impl DiagnosticsState {
+    /// Empty diagnostics state.
     pub fn new() -> Self {
         Self {
             dbc: Mutex::new(None),

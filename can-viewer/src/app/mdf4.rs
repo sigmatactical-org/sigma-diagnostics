@@ -18,6 +18,7 @@ use std::sync::{Arc, Weak as StdWeak};
 
 use super::dbc::DbcController;
 
+/// MDF4 tab: load logs, filter frames, decode against the active DBC.
 pub struct Mdf4Controller {
     state: Arc<AppState>,
     ui: Weak<SigmaDiagnostics>,
@@ -27,6 +28,7 @@ pub struct Mdf4Controller {
 }
 
 impl Mdf4Controller {
+    /// Controller bound to the shared state and UI handle.
     pub fn new(state: Arc<AppState>, ui: Weak<SigmaDiagnostics>) -> Self {
         Self {
             state,
@@ -42,6 +44,7 @@ impl Mdf4Controller {
         *self.dbc_editor.lock() = dbc;
     }
 
+    /// Hook the MDF4 tab callbacks.
     pub fn wire(self: Arc<Self>, ui: &SigmaDiagnostics) {
         ui.on_open_mdf4({
             let this = self.clone();
@@ -92,6 +95,7 @@ impl Mdf4Controller {
         }
     }
 
+    /// Load files passed on the command line, if any.
     pub fn load_initial_files(&self) {
         // Prefer the latest Sigma Racer DBC from updates (cached locally).
         if let Err(e) = self.load_latest_dbc_from_updates() {

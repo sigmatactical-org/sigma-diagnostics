@@ -20,6 +20,7 @@ pub struct AppState {
 }
 
 impl AppState {
+    /// State seeded with command-line files to open at startup.
     pub fn with_initial_files(initial_files: InitialFiles) -> Self {
         let session = SessionConfig::load();
         Self {

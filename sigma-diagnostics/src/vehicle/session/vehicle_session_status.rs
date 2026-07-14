@@ -9,6 +9,7 @@ pub enum VehicleSessionStatus {
 }
 
 impl VehicleSessionStatus {
+    /// Human-readable status name.
     pub fn label(self) -> &'static str {
         match self {
             Self::Disconnected => "Disconnected",

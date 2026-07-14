@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use super::{DbcCatalogFile, DbcCatalogResponse, UpdatesConfig};
 
+/// List the DBC files published on the updates service.
 pub fn fetch_dbc_catalog(cfg: &UpdatesConfig) -> Result<Vec<DbcCatalogFile>, String> {
     let body = ureq::get(&cfg.list_dbc_url())
         .config()
@@ -33,6 +34,7 @@ pub fn fetch_latest_dbc(cfg: &UpdatesConfig) -> Result<DbcCatalogFile, String> {
     serde_json::from_str(&body).map_err(|e| format!("Latest DBC JSON: {e}"))
 }
 
+/// Download one catalog DBC and return its local path.
 pub fn download_dbc(cfg: &UpdatesConfig, file: &DbcCatalogFile) -> Result<String, String> {
     let url = cfg.download_url(&file.download_path);
     let body = ureq::get(&url)

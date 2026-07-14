@@ -26,6 +26,7 @@ use super::endian::{endian_label, endian_storage};
 use super::rows::{message_row, node_row, selected_message_signals};
 use super::save_target::SaveTarget;
 
+/// DBC tab: load, inspect, edit, and save CAN dictionaries.
 pub struct DbcController {
     state: Arc<AppState>,
     ui: Weak<SigmaDiagnostics>,
@@ -42,6 +43,7 @@ pub struct DbcController {
 }
 
 impl DbcController {
+    /// Controller bound to the shared state and UI handle.
     pub fn new(state: Arc<AppState>, ui: Weak<SigmaDiagnostics>) -> Self {
         Self {
             state,
@@ -57,10 +59,12 @@ impl DbcController {
         }
     }
 
+    /// Let the MDF4 tab re-decode when the active DBC changes.
     pub fn set_file_master(&self, mdf4: StdWeak<Mdf4Controller>) {
         *self.file_master.lock() = mdf4;
     }
 
+    /// Hook the DBC tab callbacks.
     pub fn wire(self: Arc<Self>, ui: &SigmaDiagnostics) {
         if let Ok(Some(info)) = get_dbc_info(&self.state) {
             *self.edit_state.lock() = info;

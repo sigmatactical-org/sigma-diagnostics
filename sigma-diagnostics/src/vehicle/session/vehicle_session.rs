@@ -38,6 +38,7 @@ impl Default for VehicleSession {
 }
 
 impl VehicleSession {
+    /// Disconnected session with config from the environment.
     pub fn new() -> Self {
         Self {
             config: Mutex::new(VehicleLinkConfig::default()),
@@ -53,26 +54,32 @@ impl VehicleSession {
         }
     }
 
+    /// Current link status.
     pub fn status(&self) -> VehicleSessionStatus {
         *self.status.lock()
     }
 
+    /// Most recent connect/stream error, if any.
     pub fn last_error(&self) -> Option<String> {
         self.last_error.lock().clone()
     }
 
+    /// Copy of the active link configuration.
     pub fn config(&self) -> VehicleLinkConfig {
         self.config.lock().clone()
     }
 
+    /// Replace the link configuration (takes effect on next connect).
     pub fn set_config(&self, cfg: VehicleLinkConfig) {
         *self.config.lock() = cfg;
     }
 
+    /// Path of the active session recording, if recording.
     pub fn recording_path(&self) -> Option<PathBuf> {
         self.recording_path.lock().clone()
     }
 
+    /// Connect over the configured transport and start streaming.
     pub fn connect(&self, state: &DiagnosticsState) -> Result<(), String> {
         let cfg = self.config.lock().clone();
         *self.status.lock() = VehicleSessionStatus::Connecting;
@@ -139,6 +146,7 @@ impl VehicleSession {
         Ok(())
     }
 
+    /// Stop streaming and drop the link.
     pub fn disconnect(&self, state: &DiagnosticsState) {
         self.teardown_links(state);
         *self.status.lock() = VehicleSessionStatus::Disconnected;
@@ -151,6 +159,7 @@ impl VehicleSession {
         *self.recorder.lock() = None;
     }
 
+    /// Replay a recorded session instead of a live link.
     pub fn start_replay(&self, path: PathBuf) -> Result<(), String> {
         self.teardown_links(&DiagnosticsState::default());
         let replayer = TelemetryReplayer::open(path)?;
@@ -160,6 +169,7 @@ impl VehicleSession {
         Ok(())
     }
 
+    /// Stop an active replay.
     pub fn stop_replay(&self) {
         *self.replayer.lock() = None;
         if matches!(*self.status.lock(), VehicleSessionStatus::Replaying) {
@@ -167,6 +177,7 @@ impl VehicleSession {
         }
     }
 
+    /// Whether a live link or replay is currently feeding state.
     pub fn is_connected(&self, state: &DiagnosticsState) -> bool {
         match *self.status.lock() {
             VehicleSessionStatus::Connected => match self.config.lock().transport {
@@ -178,6 +189,7 @@ impl VehicleSession {
         }
     }
 
+    /// Snapshot vehicle state + link health for the diagnosis view.
     pub fn poll_diagnosis(&self, state: &DiagnosticsState) -> DiagnosisSnapshot {
         if matches!(*self.status.lock(), VehicleSessionStatus::Replaying) {
             return self.poll_replay();

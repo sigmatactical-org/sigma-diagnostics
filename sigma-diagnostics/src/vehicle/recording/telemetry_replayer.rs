@@ -15,6 +15,7 @@ pub struct TelemetryReplayer {
 }
 
 impl TelemetryReplayer {
+    /// Load a recorded session for replay.
     pub fn open(path: PathBuf) -> Result<Self, String> {
         let file = File::open(&path).map_err(|e| format!("open session: {e}"))?;
         let reader = BufReader::new(file);
@@ -37,26 +38,32 @@ impl TelemetryReplayer {
         })
     }
 
+    /// The session file being replayed.
     pub fn path(&self) -> &Path {
         &self.path
     }
 
+    /// Number of messages in the session.
     pub fn total_lines(&self) -> usize {
         self.lines.len()
     }
 
+    /// Messages replayed so far.
     pub fn position(&self) -> usize {
         self.index
     }
 
+    /// Whether the whole session has been replayed.
     pub fn finished(&self) -> bool {
         self.index >= self.lines.len()
     }
 
+    /// Vehicle state after the messages replayed so far.
     pub fn state(&self) -> &VehicleState {
         &self.state
     }
 
+    /// Sequence number of the last replayed message.
     pub fn seq(&self) -> u64 {
         self.seq
     }
@@ -77,6 +84,7 @@ impl TelemetryReplayer {
         true
     }
 
+    /// Rewind to the start of the session.
     pub fn reset(&mut self) {
         self.index = 0;
         self.state = VehicleState::idle();

@@ -18,6 +18,7 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
 
+/// Analysis tabs (MDF4 / Live / DBC / About) reusing can-viewer services.
 pub struct AnalysisController {
     state: Arc<AppState>,
     ui: Weak<SigmaRacerMechanic>,
@@ -27,6 +28,7 @@ pub struct AnalysisController {
 }
 
 impl AnalysisController {
+    /// Controller bound to the shared state and UI handle.
     pub fn new(state: Arc<AppState>, ui: Weak<SigmaRacerMechanic>) -> Self {
         Self {
             state,
@@ -37,6 +39,7 @@ impl AnalysisController {
         }
     }
 
+    /// Hook the analysis tab callbacks.
     pub fn wire(self: Rc<Self>, ui: &SigmaRacerMechanic) {
         ui.on_open_mdf4({
             let t = self.clone();
@@ -175,6 +178,7 @@ impl AnalysisController {
         }
     }
 
+    /// Fill the About tab (versions, dependency list).
     pub fn populate_about(&self) {
         self.with_ui(|ui| {
             ui.set_about_copyright(
@@ -213,6 +217,7 @@ impl AnalysisController {
         });
     }
 
+    /// Load files passed on the command line, if any.
     pub fn load_initial(&self) {
         self.refresh_live_interfaces();
         self.refresh_dbc_status();
@@ -407,6 +412,7 @@ impl AnalysisController {
         });
     }
 
+    /// Pull pending live-capture updates into the UI (called on a timer).
     pub fn poll_live_into(&self, ui: &SigmaRacerMechanic) {
         if !ui.get_live_capturing() {
             return;
@@ -430,55 +436,7 @@ impl AnalysisController {
             )
             .into(),
         );
-        let messages: Vec<LiveMessageRow> = display
-            .messages
-            .iter()
-            .map(|m| LiveMessageRow {
-                can_id: m.can_id.clone().into(),
-                message_name: m.message_name.clone().into(),
-                data_hex: m.data_hex.clone().into(),
-                count: m.count.clone().into(),
-                rate: m.rate.clone().into(),
-            })
-            .collect();
-        let signals: Vec<LiveSignalRow> = display
-            .signals
-            .iter()
-            .map(|s| LiveSignalRow {
-                message_name: s.message_name.clone().into(),
-                signal_name: s.signal_name.clone().into(),
-                value: s.value.clone().into(),
-                unit: s.unit.clone().into(),
-                min_value: s.min_value.clone().into(),
-                max_value: s.max_value.clone().into(),
-            })
-            .collect();
-        let frames: Vec<LiveFrameRow> = display
-            .frames
-            .iter()
-            .map(|f| LiveFrameRow {
-                timestamp: f.timestamp.clone().into(),
-                can_id: f.can_id.clone().into(),
-                dlc: f.dlc.clone().into(),
-                data_hex: f.data_hex.clone().into(),
-                flags: f.flags.clone().into(),
-            })
-            .collect();
-        let errors: Vec<LiveErrorRow> = display
-            .errors
-            .iter()
-            .map(|e| LiveErrorRow {
-                timestamp: e.timestamp.clone().into(),
-                channel: e.channel.clone().into(),
-                error_type: e.error_type.clone().into(),
-                details: e.details.clone().into(),
-                count: e.count.clone().into(),
-            })
-            .collect();
-        ui.set_live_messages(ModelRc::new(VecModel::from(messages)));
-        ui.set_live_signals(ModelRc::new(VecModel::from(signals)));
-        ui.set_live_frames(ModelRc::new(VecModel::from(frames)));
-        ui.set_live_errors(ModelRc::new(VecModel::from(errors)));
+        can_viewer::apply_live_rows!(ui, &display);
     }
 
     fn refresh_dbc_ui(&self) {

@@ -15,10 +15,12 @@ pub struct SessionConfig {
 }
 
 impl SessionConfig {
+    /// Mechanic's per-user config directory.
     pub fn config_dir() -> Option<PathBuf> {
         dirs::config_dir().map(|p| p.join("sigma-racer-mechanic"))
     }
 
+    /// Path of the persisted config file.
     pub fn config_path() -> Option<PathBuf> {
         Self::config_dir().map(|p| p.join("session.json"))
     }
@@ -28,6 +30,7 @@ impl SessionConfig {
         dirs::config_dir().map(|p| p.join("sigma-diagnostics").join("dbc-cache"))
     }
 
+    /// Load the persisted config, falling back to defaults.
     pub fn load() -> Self {
         let mut cfg: SessionConfig = Self::config_path()
             .and_then(|path| fs::read_to_string(&path).ok())
@@ -46,6 +49,7 @@ impl SessionConfig {
         cfg
     }
 
+    /// Persist the config to disk.
     pub fn save(&self) -> Result<(), String> {
         let dir = Self::config_dir().ok_or("No config dir")?;
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
@@ -54,6 +58,7 @@ impl SessionConfig {
         fs::write(path, content).map_err(|e| e.to_string())
     }
 
+    /// Set and persist the preferred CAN interface.
     pub fn set_can_interface(&mut self, iface: Option<String>) -> Result<(), String> {
         self.can_interface = iface;
         self.save()

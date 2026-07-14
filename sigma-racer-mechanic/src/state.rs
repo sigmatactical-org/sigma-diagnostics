@@ -17,6 +17,7 @@ pub struct AppState {
 }
 
 impl AppState {
+    /// Shared state seeded with command-line files.
     pub fn new(initial: InitialFiles) -> Self {
         let mechanic_session = SessionConfig::load();
         Self {

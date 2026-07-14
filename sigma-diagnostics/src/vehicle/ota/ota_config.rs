@@ -10,6 +10,7 @@ pub struct OtaConfig {
 }
 
 impl OtaConfig {
+    /// Read the OTA catalog endpoint from env with lab defaults.
     pub fn from_env() -> Self {
         Self {
             base_url: std::env::var("SIGMA_UPDATES_URL")
@@ -22,10 +23,12 @@ impl OtaConfig {
         }
     }
 
+    /// Endpoint for the channel's latest image release.
     pub fn latest_url(&self) -> String {
         format!("{}/v1/channel/{}/latest", self.base_url, self.channel)
     }
 
+    /// The equivalent DBC-catalog config (same service).
     pub fn as_dbc_updates(&self) -> DbcUpdatesConfig {
         DbcUpdatesConfig {
             base_url: self.base_url.clone(),

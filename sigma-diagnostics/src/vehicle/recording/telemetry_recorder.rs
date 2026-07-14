@@ -12,6 +12,7 @@ pub struct TelemetryRecorder {
 }
 
 impl TelemetryRecorder {
+    /// Create the session file and start recording.
     pub fn start(path: PathBuf) -> Result<Self, String> {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(|e| format!("create session dir: {e}"))?;
@@ -24,6 +25,7 @@ impl TelemetryRecorder {
         })
     }
 
+    /// Append one telemetry message as an NDJSON line.
     pub fn write_message(&mut self, msg: &Message) -> Result<(), String> {
         let line = msg.to_line();
         self.file
@@ -34,10 +36,12 @@ impl TelemetryRecorder {
         Ok(())
     }
 
+    /// The session file being written.
     pub fn path(&self) -> &Path {
         &self.path
     }
 
+    /// Messages recorded so far.
     pub fn lines_written(&self) -> u64 {
         self.lines
     }

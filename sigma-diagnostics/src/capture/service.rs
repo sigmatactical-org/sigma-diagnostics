@@ -209,22 +209,8 @@ fn log_frame_to_mdf4(
     logger: &mut Option<mdf4_rs::can::RawCanLogger<mdf4_rs::writer::VecWriter>>,
     frame: &crate::dto::CanFrameDto,
 ) {
-    use mdf4_rs::can::FdFlags;
-
-    let Some(logger) = logger else { return };
-    let timestamp_us = (frame.timestamp * 1_000_000.0) as u64;
-
-    if frame.is_fd {
-        let flags = FdFlags::new(frame.brs, frame.esi);
-        if frame.is_extended {
-            logger.log_fd_extended(frame.can_id, timestamp_us, &frame.data, flags);
-        } else {
-            logger.log_fd(frame.can_id, timestamp_us, &frame.data, flags);
-        }
-    } else if frame.is_extended {
-        logger.log_extended(frame.can_id, timestamp_us, &frame.data);
-    } else {
-        logger.log(frame.can_id, timestamp_us, &frame.data);
+    if let Some(logger) = logger {
+        crate::mdf::log_frame(logger, frame);
     }
 }
 

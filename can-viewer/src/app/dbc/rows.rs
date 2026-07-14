@@ -7,6 +7,7 @@ use crate::{
 
 use super::endian::endian_label;
 
+/// UI row for one DBC message.
 pub(super) fn message_row(m: &MessageInfo) -> UiDbcMessageRow {
     UiDbcMessageRow {
         id: format!("0x{:X}", m.id).into(),
@@ -17,6 +18,7 @@ pub(super) fn message_row(m: &MessageInfo) -> UiDbcMessageRow {
     }
 }
 
+/// UI row for one DBC node.
 pub(super) fn node_row(n: &NodeInfo) -> UiDbcNodeRow {
     UiDbcNodeRow {
         name: n.name.clone().into(),
@@ -24,6 +26,7 @@ pub(super) fn node_row(n: &NodeInfo) -> UiDbcNodeRow {
     }
 }
 
+/// Signal rows of the selected message.
 pub(super) fn selected_message_signals(info: &DbcInfo, msg_idx: i32) -> Vec<UiDbcSignalRow> {
     info.messages
         .get(msg_idx as usize)

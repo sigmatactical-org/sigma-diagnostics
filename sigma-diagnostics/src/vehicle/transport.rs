@@ -11,6 +11,7 @@ pub enum VehicleTransport {
 }
 
 impl VehicleTransport {
+    /// Human-readable transport name.
     pub fn label(self) -> &'static str {
         match self {
             Self::SocketCan => "SocketCAN",
