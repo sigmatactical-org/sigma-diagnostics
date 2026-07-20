@@ -3,9 +3,10 @@ import { AppTitle } from "widgets/brand.slint";
 import { Mdf4Tab } from "tabs/mdf4_tab.slint";
 import { LiveTab } from "tabs/live_tab.slint";
 import { DbcTab } from "tabs/dbc_tab.slint";
+import { AnalyzeTab } from "tabs/analyze_tab.slint";
 import { AboutTab } from "tabs/about_tab.slint";
 import { DbcCatalogDialog } from "widgets/dbc_catalog.slint";
-import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow, DbcBitRow, DbcBitBand, DepRow, DbcCatalogRow, FileLoadButton } from "widgets/common.slint";
+import { FrameRow, SignalRow, LiveMessageRow, LiveSignalRow, LiveFrameRow, LiveErrorRow, DbcMessageRow, DbcSignalRow, DbcNodeRow, DbcAttributeRow, DbcValueDescRow, DbcBitRow, DbcBitBand, DepRow, DbcCatalogRow, FileLoadButton, AnalyzeIdRow, AnalyzeBitRow, AnalyzeFactRow } from "widgets/common.slint";
 
 export component SigmaDiagnostics inherits Window {
     title: "CAN Viewer";
@@ -102,6 +103,17 @@ export component SigmaDiagnostics inherits Window {
     in-out property <int> dbc-editor-panel: 0;
     in-out property <bool> dbc-editing: false;
 
+    // Analyze tab (definitive reverse-engineering survey)
+    callback run-analysis();
+    callback analyze-id-selected(int);
+    in-out property <string> analyze-status: "";
+    in-out property <bool> analyze-done: false;
+    in-out property <[AnalyzeIdRow]> analyze-ids;
+    in-out property <int> analyze-selected-id: -1;
+    in-out property <string> analyze-detail-title: "";
+    in-out property <[AnalyzeBitRow]> analyze-bit-rows;
+    in-out property <[AnalyzeFactRow]> analyze-facts;
+
     // About tab
     in-out property <string> about-copyright: "";
     in-out property <string> about-license-notice: "";
@@ -152,7 +164,7 @@ export component SigmaDiagnostics inherits Window {
                         height: 18px;
                         background: SigmaTheme.border;
                     }
-                    for tab-label[i] in ["MDF4", "Live", "DBC", "About"]: Rectangle {
+                    for tab-label[i] in ["MDF4", "Live", "DBC", "Analyze", "About"]: Rectangle {
                         height: 24px;
                         min-width: 56px;
                         background: root.active-tab == i
@@ -300,7 +312,21 @@ export component SigmaDiagnostics inherits Window {
                 bit-cell-clicked(index) => { root.bit-cell-clicked(index); }
             }
 
-            if root.active-tab == 3: AboutTab {
+            if root.active-tab == 3: AnalyzeTab {
+                width: 100%;
+                height: 100%;
+                status <=> root.analyze-status;
+                analyzed <=> root.analyze-done;
+                ids <=> root.analyze-ids;
+                selected-id <=> root.analyze-selected-id;
+                detail-title <=> root.analyze-detail-title;
+                bit-rows <=> root.analyze-bit-rows;
+                facts <=> root.analyze-facts;
+                run-analysis => { root.run-analysis(); }
+                id-selected(index) => { root.analyze-id-selected(index); }
+            }
+
+            if root.active-tab == 4: AboutTab {
                 width: 100%;
                 height: 100%;
                 version-text: root.version-text;

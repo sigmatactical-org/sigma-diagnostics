@@ -4,6 +4,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod analysis;
 pub mod capture;
 pub mod dbc;
 pub mod dbc_export;
@@ -12,6 +13,7 @@ pub mod dto;
 pub mod filter;
 pub mod live_capture;
 pub mod mdf;
+pub mod obd;
 pub mod state;
 pub mod updates;
 pub mod vehicle;

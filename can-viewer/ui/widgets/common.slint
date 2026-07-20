@@ -109,6 +109,32 @@ export struct DepRow {
     license: string,
 }
 
+/// One CAN ID in the reverse-engineering survey table.
+export struct AnalyzeIdRow {
+    can-id: string,
+    frames: string,
+    period: string,
+    distinct: string,
+    facts: string,
+}
+
+/// One empirical bit: state 0 const-0, 1 const-1, 2 toggles, 3 unobserved.
+export struct AnalyzeBitCell {
+    state: int,
+}
+
+/// One byte of the empirical activity grid: cells[0]=bit7 … cells[7]=bit0.
+export struct AnalyzeBitRow {
+    byte-label: string,
+    cells: [AnalyzeBitCell],
+}
+
+/// A proven fact line (counter / checksum / mux / note).
+export struct AnalyzeFactRow {
+    kind: string,
+    text: string,
+}
+
 export struct DbcCatalogRow {
     filename: string,
     name: string,
