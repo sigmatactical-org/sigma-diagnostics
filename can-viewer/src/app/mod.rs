@@ -1,6 +1,7 @@
 //! Slint UI wiring and application controller.
 
 mod analysis;
+mod analyze;
 mod catalog;
 mod dbc;
 mod helpers;

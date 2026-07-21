@@ -1,5 +1,6 @@
 //! Shared analysis-tab controller bundle (MDF4 / Live / DBC / Catalog / About).
 
+use super::analyze::AnalyzeController;
 use super::catalog::CatalogController;
 use super::dbc::DbcController;
 use super::live::LiveController;
@@ -16,6 +17,7 @@ pub struct AnalysisControllers {
     pub live: Rc<LiveController>,
     pub dbc: Arc<DbcController>,
     pub catalog: Arc<CatalogController>,
+    pub analyze: Arc<AnalyzeController>,
 }
 
 impl AnalysisControllers {
@@ -27,16 +29,18 @@ impl AnalysisControllers {
         mdf4.set_dbc_editor(Arc::downgrade(&dbc));
         dbc.set_file_master(Arc::downgrade(&mdf4));
         let catalog = Arc::new(CatalogController::new(
-            state,
+            state.clone(),
             ui.as_weak(),
             Arc::downgrade(&mdf4),
             Arc::downgrade(&dbc),
         ));
+        let analyze = Arc::new(AnalyzeController::new(state, ui.as_weak()));
         Self {
             mdf4,
             live,
             dbc,
             catalog,
+            analyze,
         }
     }
 
@@ -46,6 +50,7 @@ impl AnalysisControllers {
         LiveController::wire(self.live.clone(), ui);
         DbcController::wire(self.dbc.clone(), ui);
         CatalogController::wire(self.catalog.clone(), ui);
+        AnalyzeController::wire(self.analyze.clone(), ui);
         crate::about::populate(ui);
     }
 
