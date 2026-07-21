@@ -29,7 +29,7 @@ mdf4-rs = { workspace = true }
 dbc-rs = { workspace = true }
 embedded-can = { workspace = true }
 sigma-racer-telemetry = { git = "https://github.com/sigmatactical-org/sigma-racer-telemetry.git", rev = "bc172e6" }
-vss-map = { git = "https://github.com/sigmatactical-org/vss-map.git", default-features = false, features = ["yaml", "json"] }
+vss-map = { git = "https://github.com/sigmatactical-org/vss-map.git", rev = "6e614bb", default-features = false, features = ["yaml", "json"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 socketcan = { workspace = true }
