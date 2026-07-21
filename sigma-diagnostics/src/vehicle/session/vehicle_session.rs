@@ -315,6 +315,7 @@ impl VehicleSession {
             *seq = msg.seq;
             if let Some(data) = msg.vss_data() {
                 state.apply_vss_map(data);
+                state.apply_availability(msg.avail_data());
             }
             self.observe_message(&msg, &state);
             if let Some(rec) = recorder.as_mut() {

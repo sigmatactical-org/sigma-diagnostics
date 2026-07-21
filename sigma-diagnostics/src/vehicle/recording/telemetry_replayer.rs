@@ -89,6 +89,7 @@ impl TelemetryReplayer {
         self.seq = msg.seq;
         if let Some(data) = msg.vss_data() {
             self.state.apply_vss_map(data);
+            self.state.apply_availability(msg.avail_data());
         }
         Some(msg)
     }
