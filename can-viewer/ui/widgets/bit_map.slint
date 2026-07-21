@@ -82,9 +82,11 @@ export component SignalBitMap inherits Rectangle {
 
     // Thin frame around the bit analyzer; collapses when there is nothing to
     // show. The +20px accounts for the inner 10px padding top and bottom.
+    // A darker fill recesses it from the raised detail box behind it.
     border-width: 1px;
     border-color: SigmaTheme.border;
     border-radius: 4px;
+    background: SigmaTheme.background.transparentize(0.35);
     vertical-stretch: 0;
     height: root.bands.length == 0 ? 0px : root.preferred-map-height() + 20px;
 
